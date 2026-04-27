@@ -1,0 +1,108 @@
+Metadata-Version: 2.4
+Name: bladewalker
+Version: 0.1.0
+Summary: Prototype RL BladeWalker with Gymnasium Box2D and Stable-Baselines3
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: stable-baselines3<3,>=2.3.0
+Requires-Dist: gymnasium[box2d]<1,>=0.29.1
+Requires-Dist: torch>=2.1.0
+Requires-Dist: pygame>=2.5.0
+Requires-Dist: moviepy>=1.0.3
+Requires-Dist: numpy>=1.24
+Requires-Dist: tensorboard>=2.16
+Requires-Dist: rich>=13.0
+Provides-Extra: dev
+Requires-Dist: ruff>=0.5.0; extra == "dev"
+
+# BladeWalker - Version test RL
+
+Prototype minimal pour valider la stack technique avant de lancer ton vrai projet:
+- Python 3.10+
+- Stable-Baselines3 (RL)
+- PyTorch (backend SB3)
+- Gymnasium + Box2D (physique)
+- PyGame (rendu en mode `human`)
+- Export vidéo via `rgb_array`
+
+## Structure
+
+- `src/bladewalker/config.py`: configuration de base (env, chemins artefacts)
+- `src/bladewalker/envs.py`: fabrique d'environnement Gymnasium
+- `scripts/train.py`: entrainement PPO
+- `scripts/play.py`: visualisation live (`render_mode=human`)
+- `scripts/export_video.py`: export de rollout en vidéo
+- `scripts/smoke_test.py`: test rapide de l'environnement
+
+## Installation rapide
+
+Prerequis Linux pour Box2D (sinon l'installation peut echouer):
+
+```bash
+sudo apt-get update
+sudo apt-get install -y swig build-essential
+```
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -e .
+```
+
+Alternative simple:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Test ultra-rapide (sanity check)
+
+Si Box2D est installe:
+
+```bash
+PYTHONPATH=src python scripts/smoke_test.py --env-id BipedalWalker-v3 --steps 200
+```
+
+Si tu veux juste valider le wiring Python/Gym avant Box2D:
+
+```bash
+PYTHONPATH=src python scripts/smoke_test.py --env-id CartPole-v1 --steps 100
+```
+
+## Entrainer un premier agent (preset rapide)
+
+```bash
+PYTHONPATH=src python scripts/train.py --env-id BipedalWalker-v3 --timesteps 50000 --save-name latest
+```
+
+Le modele est sauvegarde dans `artifacts/models/latest.zip`.
+
+## Voir l'agent en direct
+
+```bash
+PYTHONPATH=src python scripts/play.py --env-id BipedalWalker-v3 --model-path artifacts/models/latest.zip --episodes 3
+```
+
+## Exporter une video
+
+```bash
+PYTHONPATH=src python scripts/export_video.py --env-id BipedalWalker-v3 --model-path artifacts/models/latest.zip --episodes 1
+```
+
+Videos generees dans `artifacts/videos`.
+
+## Utiliser un "pack d'apprentissage" existant
+
+Tu peux repartir d'un modele deja appris (checkpoint `.zip` SB3):
+
+```bash
+PYTHONPATH=src python scripts/train.py --env-id BipedalWalker-v3 --model-path chemin/vers/model.zip --timesteps 20000 --save-name finetune
+```
+
+## Notes
+
+- Pour un test encore plus rapide, remplace `BipedalWalker-v3` par `LunarLander-v2`.
+- `BipedalWalker-v3` est plus proche du cas "BladeWalker" (locomotion sur jambes).
+- Ce repo est un bac a sable de validation: tu pourras ensuite remplacer l'environnement par ton monde custom.
+
