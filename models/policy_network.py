@@ -1,4 +1,4 @@
-import Tensorflow as tf
+import tensorflow as tf
 
 class ActorCritic(tf.keras.Model):
     def __init__(self, obs_dim, act_dim):
@@ -9,16 +9,22 @@ class ActorCritic(tf.keras.Model):
             tf.keras.layers.Dense(64, activation='tanh'),
         ])
 
+        self.actor_mean = tf.keras.layers.Dense(act_dim)
+        self.critic = tf.keras.layers.Dense(1)
+
     def call(self, obs):
         x = self.backbone(obs)
-        return x
+        mean = self.actor_mean(x)
+        value = self.critic(x)
+        return mean, value
 
 if __name__ == "__main__":
     import numpy as np
 
-    model = ActorCritic(obs_dim=14, act_dim=2)
+    model = ActorCritic(obs_dim=14, act_dim=4)
 
-    batch = np.randn(4, 14).astype(np.float32)
-    x = model(batch)
+    batch = np.random.randn(4, 14).astype(np.float32)
+    mean, value = model(batch)
 
-    print(x.shape)
+    print("mean: ", mean.shape)
+    print("value: ", value.shape)
