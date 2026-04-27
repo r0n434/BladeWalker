@@ -41,6 +41,6 @@ if __name__ == "__main__":
 
     action, log_prob, value = model.get_action(batch)
 
-    print("action: ", aciton.shape)
+    print("action: ", action.shape)
     print("log_prob: ", log_prob.shape)
     print("value: ", value.shape)
