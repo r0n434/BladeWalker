@@ -24,7 +24,7 @@ class ActorCritic(tf.keras.Model):
         mean, value = self.call(obs)
 
         std = tf.exp(self.log_std)
-        dist = tfp.distributions.Normal(mean, std)
+        dist = tf.distributions.Normal(mean, std)
         action = dist.sample()
         action = td.clip_by_value(action, -1.0, 1.0)
         log_prob = tf.reduce_sum(dist.log_prob(action), axis=-1)
