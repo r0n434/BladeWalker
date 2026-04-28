@@ -33,6 +33,87 @@ class WalkerEnv(gym.Env):
         observation = np.zeros(14, dtype=np.float32)
         
         return observation, {}
+    
+    def get_observation(self):
+        # Récupération des données du torse
+        torse_pos = self.torse.position
+        torse_vel = self.torse.linearVelocity
+        
+        # Détection de contact simplifiée (en attendant un ContactListener)
+        # On vérifie si le tibia est proche du sol (y=0)
+        contact_g = 1.0 if any(contact.touching for contact in self.tibia_left.contacts) else 0.0
+        contact_d = 1.0 if any(contact.touching for contact in self.tibia_right.contacts) else 0.0
+
+        observation = np.array([
+            # Torse (4)
+            self.torse.angle,
+            self.torse.angularVelocity,
+            torse_vel.x,
+            torse_vel.y,
+            
+            # Jambe Gauche (5)
+            self.joint_hanche_g.angle,
+            self.joint_hanche_g.speed,
+            self.joint_genou_g.angle,
+            self.joint_genou_g.speed,
+            contact_g,
+            
+            # Jambe Droite (5)
+            self.joint_hanche_d.angle,
+            self.joint_hanche_d.speed,
+            self.joint_genou_d.angle,
+            self.joint_genou_d.speed,
+            contact_d
+        ], dtype=np.float32)
+        
+        return observation
+    
+    def step(self, action):
+        # --- 1. APPLIQUER LES ACTIONS ---
+        # On transforme les actions [-1, 1] en vitesse pour les joints
+        MOTOR_SPEED = 4.0 # rad/s
+        
+        self.joint_hanche_g.motorSpeed = float(action[0]) * MOTOR_SPEED
+        self.joint_hanche_d.motorSpeed = float(action[1]) * MOTOR_SPEED
+        self.joint_genou_g.motorSpeed = float(action[2]) * MOTOR_SPEED
+        self.joint_genou_d.motorSpeed = float(action[3]) * MOTOR_SPEED
+
+        # --- 2. AVANCER LA PHYSIQUE ---
+        # On fait avancer le monde d'un pas (1/50 sec)
+        self.world.Step(1.0/50.0, 6, 2)
+        self.steps += 1 # Incrémenter notre compteur de temps
+
+        # --- 3. RÉCUPÉRER L'OBSERVATION (14 variables) ---
+        # On utilise la logique définie précédemment
+        obs = self.get_observation()
+
+        # --- 4. CALCULER LA RÉCOMPENSE (Reward) ---
+        # On commence par la vitesse horizontale du torse
+        vel_x = self.torse.linearVelocity.x
+        reward = vel_x  # Récompense de base : plus il avance, plus il gagne
+        
+        # Pénalité d'énergie : on retire un peu de points si l'IA s'agite trop
+        reward -= 0.003 * np.sum(np.square(action))
+
+        # --- 5. DÉTERMINER LA FIN (Terminated / Truncated) ---
+        terminated = False
+        
+        # Chute : le torse penche trop (> 1.0 rad) ou touche le sol
+        if abs(self.torse.angle) > 1.0:
+            terminated = True
+            reward -= 100  # Grosse pénalité de chute
+        
+        # Le robot recule trop
+        if self.torse.position.x < -0.5:
+            terminated = True
+
+        # Fin de temps : on limite l'essai à 1000 pas (Truncated)
+        truncated = False
+        if self.steps >= 1000:
+            truncated = True
+
+        # --- 6. RETOURNER LES RÉSULTATS ---
+        return obs, reward, terminated, truncated, {}
 
     def _create_robot(self, x_torse, y_torse):
         # --- DÉFINITION DES FIXTURES (Propriétés physiques) ---
