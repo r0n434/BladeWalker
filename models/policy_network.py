@@ -33,14 +33,33 @@ class ActorCritic(tf.keras.Model):
 
         return action, log_prob, value
 
+    def evaluate_actions(self, obs, actions):
+        mean, value = self.call(obs)
+
+        std = tf.exp(self.log_std)
+        dist = tfp.distributions.Normal(mean, std)
+
+        log_prob = tf.reduce_sum(dist.log_prob(actions), axis=-1)
+        entropy = tf.reduce_sum(dist.entropy(), axis=-1)
+        value = tf.squeeze(value, axis=-1)
+
+        return log_prob, value, entropy
+
 if __name__ == "__main__":
     import numpy as np
 
     model = ActorCritic(obs_dim=14, act_dim=4)
     batch = np.random.randn(4, 14).astype(np.float32) #valeur random à remplacer par les vrais observations du walker
+    actions = np.random.uniform(-1, 1, (4, 4)).astype(np.float32)
 
     action, log_prob, value = model.get_action(batch)
-
+    print("get_action")
     print("action: ", action.shape)
     print("log_prob: ", log_prob.shape)
     print("value: ", value.shape)
+
+    log_prob, value, entropy = model.evaluate_actions(batch, actions)
+    print("evaluate_actions")
+    print("log_prob: ", log_prob.shape)
+    print("value: ", value.shape)
+    print("entropy: ", entropy.shape)
