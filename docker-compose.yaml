@@ -1,10 +1,15 @@
-version: '3.8'
-
 services:
   dev-env:
     build: .
     container_name: bladewalker_dev
+    environment:
+      - DISPLAY=${DISPLAY}
+      - WAYLAND_DISPLAY=${WAYLAND_DISPLAY}
+      - XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}
+      - PULSE_SERVER=${PULSE_SERVER}
     volumes:
-      # Synchronise le dossier actuel (Windows/WSL) avec le /app du conteneur
-      - .:/BladeWalker
-    # Optionnel : si tu veux utiliser le GPU plus tard, on l'activera ici
+      - .:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /mnt/wslg:/mnt/wslg
+    device_cgroup_rules:
+      - 'c 226:* rmw' # Pour l'accélération graphique
