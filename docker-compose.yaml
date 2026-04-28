@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  dev-env:
+    build: .
+    container_name: bladewalker_dev
+    volumes:
+      # Synchronise le dossier actuel (Windows/WSL) avec le /app du conteneur
+      - .:/BladeWalker
+    # Optionnel : si tu veux utiliser le GPU plus tard, on l'activera ici
