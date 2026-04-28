@@ -30,6 +30,31 @@ class RolloutBuffer:
         self.log_probs.append(log_prob)
         self.values.append(value)
 
+    def compute_returns_and_advantages(self, last_value: float):
+        advantages = []
+        gae = 0.0
+
+        for t in reversed(range(len(self.rewards))):
+            reward = self.rewards[t]
+            done = self.dones[t]
+            value = self.values[t]
+
+            if t == len(self.rewards) - 1:
+                next_value = last_value
+            else:
+                next_value = self.values[t + 1]
+
+            delta = reward + self.gamma * next_value * (1 - done) - value
+
+            gae = delta + self.gamma * self.lam * (1 - done) * gae
+
+            advantages.insert(0, gae)
+
+        self.advantages = np.array(advantages, dtype=np.float32)
+        self.returns = self.advantages + np.array(self.values, dtype=np.float32)
+
+        self.advantages = (self.advantages - self.advantages.mean()) / (self.advantages.std() + 1e-8)
+
 
 if __name__ == "__main__":
     import numpy as np
@@ -46,6 +71,9 @@ if __name__ == "__main__":
 
         buf.add(obs, action, reward, done, log_prob, value)
 
-    print("steps stockés :", len(buf.obs))
-    print("shape obs[0]  :", buf.obs[0].shape)
-    print("shape act[0]  :", buf.actions[0].shape)
+    buf.compute_returns_and_advantages(last_value=0.0)
+
+    print("advantages :", buf.advantages.shape)
+    print("returns    :", buf.returns.shape)
+    print("mean adv   :", buf.advantages.mean())
+    print("std adv    :", buf.advantages.std())
