@@ -17,20 +17,23 @@ class WalkerEnv(gym.Env):
         self.world = world(gravity=(0, -10), doSleep=True)
         self.walker_body = None 
         self.bodies = [] # On initialise la liste ici pour éviter les erreurs !
+        self.steps = 0
 
     def reset(self, seed=None, options=None):
-        super().reset(seed=seed) 
+        super().reset(seed=seed)
+        self.steps = 0
 
         # Nettoyage si un robot existait déjà
         if self.walker_body is not None:
             for body in self.bodies:
                 self.world.DestroyBody(body)
-
+        self.bodies = []
         # Création du robot
         self.walker_body = self._create_robot(x_torse=5.0, y_torse=10.0)
+        self.start_x = float(self.torse.position.x)   # position initiale (≈ 5.0)
+        self.prev_x = float(self.torse.position.x)
 
-        # Observation temporaire (14 zéros)
-        observation = np.zeros(14, dtype=np.float32)
+        observation = self.get_observation()
         
         return observation, {}
     
@@ -74,8 +77,8 @@ class WalkerEnv(gym.Env):
         MOTOR_SPEED = 4.0 # rad/s
         
         self.joint_hanche_g.motorSpeed = float(action[0]) * MOTOR_SPEED
-        self.joint_hanche_d.motorSpeed = float(action[1]) * MOTOR_SPEED
-        self.joint_genou_g.motorSpeed = float(action[2]) * MOTOR_SPEED
+        self.joint_genou_g.motorSpeed = float(action[1]) * MOTOR_SPEED
+        self.joint_hanche_d.motorSpeed = float(action[2]) * MOTOR_SPEED
         self.joint_genou_d.motorSpeed = float(action[3]) * MOTOR_SPEED
 
         # --- 2. AVANCER LA PHYSIQUE ---
@@ -98,7 +101,7 @@ class WalkerEnv(gym.Env):
             
         
         # Le robot recule trop
-        if self.torse.position.x < -0.5:
+        if self.torse.position.x < self.start_x - 0.5:
             terminated = True
 
         # Fin de temps : on limite l'essai à 1000 pas (Truncated)
@@ -109,7 +112,7 @@ class WalkerEnv(gym.Env):
         
 
         # --- 6. RETOURNER LES RÉSULTATS ---
-        return obs, reward, terminated, truncated, {}
+        return obs, self._compute_reward(action, terminated), terminated, truncated, {}
 
     def _create_robot(self, x_torse, y_torse):
         # --- DÉFINITION DES FIXTURES (Propriétés physiques) ---
@@ -159,6 +162,42 @@ class WalkerEnv(gym.Env):
 
         self.bodies = [self.torse, self.cuisse_left, self.cuisse_right, self.tibia_left, self.tibia_right]
         return self.torse
+    
+    def _compute_reward(self, action, terminated):
+        """
+        Reward conforme à la section '9. La fonction de récompense' du README.
+
+        Étape 1 : avancer (velocity_x) -> version robuste: delta_x / dt ?
+        Étape 2 : pénalité énergie: -0.003 * sum(action^2)
+        Étape 3 : pénalité chute: -100 si terminated
+        Étape 4 : bonus survie (optionnel): +0.001
+        """
+        # dt doit être cohérent avec ton world.Step(...)
+        # (idéalement self.TIME_STEP = 1/50 si tu suis le README)
+        dt = getattr(self, "TIME_STEP", 1.0 / self.metadata.get("render_fps", 50))
+
+        x = float(self.torse.position.x)
+
+        # Forward: utiliser delta_x/dt (recommandé dans le README)
+        prev_x = getattr(self, "prev_x", x)
+        velocity_x = (x - float(prev_x)) / dt
+        self.prev_x = x
+
+        # Étape 1
+        reward = velocity_x
+
+        # Étape 2: énergie
+        action = np.asarray(action, dtype=np.float32)
+        reward -= 0.003 * float(np.sum(action ** 2))
+
+        # Étape 3: chute
+        if terminated:
+            reward -= 100.0
+
+        # Étape 4 (optionnel)
+        reward += 0.001
+
+        return float(reward)
 
 # ==========================================
 # SCRIPT DE TEST (À mettre tout en bas)
@@ -173,6 +212,6 @@ if __name__ == "__main__":
     obs, info = env.reset()
     
     print(" Reset réussi !")
-    print(f"Observation (doit être 14 zéros) : {obs}")
+    print(f"Observation : {obs}")
     print(f"Position du torse : {env.torse.position}")
     print(f"Nombre de membres créés : {len(env.bodies)}")
