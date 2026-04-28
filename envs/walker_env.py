@@ -87,13 +87,7 @@ class WalkerEnv(gym.Env):
         # On utilise la logique définie précédemment
         obs = self.get_observation()
 
-        # --- 4. CALCULER LA RÉCOMPENSE (Reward) ---
-        # On commence par la vitesse horizontale du torse
-        vel_x = self.torse.linearVelocity.x
-        reward = vel_x  # Récompense de base : plus il avance, plus il gagne
         
-        # Pénalité d'énergie : on retire un peu de points si l'IA s'agite trop
-        reward -= 0.003 * np.sum(np.square(action))
 
         # --- 5. DÉTERMINER LA FIN (Terminated / Truncated) ---
         terminated = False
@@ -101,7 +95,7 @@ class WalkerEnv(gym.Env):
         # Chute : le torse penche trop (> 1.0 rad) ou touche le sol
         if abs(self.torse.angle) > 1.0:
             terminated = True
-            reward -= 100  # Grosse pénalité de chute
+            
         
         # Le robot recule trop
         if self.torse.position.x < -0.5:
@@ -111,6 +105,8 @@ class WalkerEnv(gym.Env):
         truncated = False
         if self.steps >= 1000:
             truncated = True
+        
+        
 
         # --- 6. RETOURNER LES RÉSULTATS ---
         return obs, reward, terminated, truncated, {}
