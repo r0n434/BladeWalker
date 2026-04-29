@@ -80,6 +80,9 @@ ppo = PPO(
     n_epochs=CONFIG["n_epochs"],
     batch_size=CONFIG["batch_size"],
 )
+# Construire le modèle en appelant une fois avec un dummy input
+dummy_obs = tf.zeros((1, CONFIG["obs_dim"]), dtype=tf.float32)
+model.get_action(dummy_obs)
 
 os.makedirs(CONFIG["checkpoint_dir"], exist_ok=True)
 
