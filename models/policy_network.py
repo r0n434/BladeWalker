@@ -49,7 +49,7 @@ if __name__ == "__main__":
     import numpy as np
 
     model = ActorCritic(obs_dim=14, act_dim=4)
-    batch = np.random.randn(4, 14).astype(np.float32) #valeur random à remplacer par les vrais observations du walker
+    batch = np.random.randn(4, 14).astype(np.float32) # valeur random à remplacer par les vrais observations du walker
     actions = np.random.uniform(-1, 1, (4, 4)).astype(np.float32)
 
     action, log_prob, value = model.get_action(batch)
