@@ -1,6 +1,36 @@
-# T7 & T9 — RolloutBuffer et PPO
+Consulter `train.py` et `train_sac.py` pour les conventions de logging et `training/` pour les buffers et algos.
 
-> Modules : `training/rollout_buffer.py`, `training/ppo.py`
+---
+
+## Exemples & hyperparamètres par défaut
+
+### Commandes rapides
+
+```bash
+# PPO (on-policy)
+python train.py
+
+# SAC (off-policy)
+python train_sac.py
+```
+
+### Hyperparamètres de départ
+
+| Paramètre | PPO | SAC |
+|---|---:|---:|
+| lr (actor/critic) | 3e-4 | actor=3e-4 / critic=3e-4 |
+| rollout / batch | n_steps=2048 / batch=64 | batch_size=256 / update_every=50 |
+| gamma | 0.99 | 0.99 |
+| entropy | c2=0.01 | auto_alpha=True |
+| replay buffer | N/A | capacity=1e6 |
+
+Ces valeurs sont des points de départ — ajuste `replay_buffer`, `reward scaling` ou `critic_lr` si tu observes des pertes critiques très élevées.
+# T7 & T9 — RolloutBuffer et SAC
+
+> Modules : `training/rollout_buffer.py`, `training/sac_tf.py`
+
+> Note : la logique PPO se trouve aujourd'hui dans `train.py` (racine). Une extraction
+> vers `training/ppo.py` est possible si tu veux une structure symétrique.
 
 ---
 
@@ -384,7 +414,24 @@ On ne peut pas réutiliser d'anciens rollouts (contrairement à SAC ou DQN qui g
 
 La seule exception : les `n_epochs` passes sur le même buffer. C'est toléré parce que le clip empêche la policy de trop s'éloigner des données collectées.
 
----
+
+## 12.b SAC — Off-policy (résumé)
+
+SAC (Soft Actor-Critic) est un algorithme off-policy : il utilise un **replay buffer** et des mises à jour à partir d'échantillons hors-ligne.
+
+- Replay buffer : stocke des millions de transitions `(s,a,r,s',done)` et permet des mises à jour fréquentes sans collecter de nouveaux rollouts.
+- Twin critics : SAC utilise deux estimateurs `Q(s,a)` pour réduire le biais de sur-estimation.
+- Actor stochastique : la politique est gaussienne suivie d'une `tanh` pour contraindre les actions à [-1,1].
+- Entropie automatique : un coefficient `α` (température) est ajusté automatiquement pour atteindre une `target_entropy`.
+
+Points pratiques dans ce dépôt :
+- Les réseaux SAC sont définis dans `models/sac_networks.py` (`QNetwork`, `GaussianPolicy`) et utilisent `models/common_backbone.MLP` pour le backbone.
+- La logique d'entraînement et le replay buffer sont dans `training/sac_tf.py` (fonction `train_sac()` + `SACAgentTF`).
+- Lanceur : `python train_sac.py` (racine).
+- Checkpoints : les poids des réseaux et la variable `log_alpha` sont maintenant sauvegardés pour permettre un vrai resume d'entraînement.
+
+Remarque : SAC est architecturé différemment de PPO (critics `Q(s,a)` vs critic `V(s)`), donc il utilise ses propres têtes réseau — on réutilise la même philosophie de backbone mais pas la même classe `ActorCritic` de PPO.
+
 
 ## 13. Flux complet
 
@@ -424,3 +471,36 @@ buf.compute_returns_and_advantages(last_value)
      ▼
 buf.reset() → retour au rollout avec π_new
 ```
+
+---
+
+## Training — points communs et différences (PPO vs SAC)
+
+Cette section résume ce qui est commun entre PPO et SAC dans ce dépôt et détaille les différences d'implémentation et de logs, pour aider au debugging et à la comparaison des runs.
+
+### Points communs
+- Même environnement `envs/walker_env.py` et mêmes espaces `observation_space` / `action_space`.
+- Backbones partagés : `models/common_backbone.MLP` (2×64 tanh par défaut).
+- Monitoring via console et TensorBoard possible pour les deux algos.
+- Checkpoints sauvegardés pour reprendre l'entraînement.
+
+### Différences principales
+- PPO (on-policy) : collecte rollouts fixes (`RolloutBuffer`) puis met à jour la policy à partir de ces trajectoires. Les données utilisées pour l'update viennent directement de la policy courante.
+- SAC (off-policy) : enregistre chaque transition dans un `ReplayBuffer` (`training/replay_buffer.py`) et échantillonne aléatoirement pour les mises à jour. Utilise twin critics, actor gaussien et température `alpha`.
+
+### Logging recommandé (comparer PPO et SAC)
+- Conserver : `Episode done` imprimé immédiatement à la fin d'un épisode (utile pour suivre la distribution des retours d'épisode).
+- Conserver : ligne agrégée périodique — pour PPO c'est une ligne par itération (rollout), pour SAC c'est une ligne par bloc d'updates (`update_every`). Cette ligne doit contenir :
+    - pour PPO : `iter | reward(mean_rollout) | loss_total | loss_actor | loss_critic | loss_entropy`
+    - pour SAC : `iter | buf_size | mean_ep_return (rolling) | mean_loss_total | mean_loss_actor | mean_loss_critic | mean_loss_entropy`
+- Supprimer/éviter : prints par step (bruit), prints de métriques pour chaque update interne (préférer une moyenne par bloc).
+- Optionnel : masquer les logs TF/CUDA non utiles avec `os.environ['TF_CPP_MIN_LOG_LEVEL']='2'` (déjà appliqué dans `train_sac.py` et `training/sac_tf.py`).
+
+### Rappels pratiques
+- `start_steps` et `update_after` (SAC) : contrôlent la phase de remplissage et le moment où débutent les entraînements. Le premier résumé `iter` apparaît à `step = update_after`.
+- `replay_buffer` : implémentation deque simple ; pour très grandes capacités passer à un ring buffer numpy pour l'efficacité mémoire.
+- Scale rewards si tu observes des pertes critic très élevées (pénalités −100 → envisager scaling 0.01 ou réduire la pénalité).
+
+---
+
+Consulte `train.py` et `train_sac.py` pour les conventions de logging et `training/` pour les buffers et algos.

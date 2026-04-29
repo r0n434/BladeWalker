@@ -77,6 +77,7 @@ pygame        >= 2.5
 stable-baselines3 >= 2.3   # pour T8 uniquement
 tensorboard   >= 2.15
 numpy         >= 1.26
+tf-keras      >= 2.15
 ```
 
 ---
@@ -95,13 +96,20 @@ BladeWalker/
 ├── models/
 │   └── policy_network.py       # Réseau acteur-critique TensorFlow
 │                               # Contient : ActorCritic (backbone + têtes),
-│                               # méthode call(), get_action(), get_value()
+│                               # méthode call(), get_action(), evaluate_actions()
+│   └── common_backbone.py      # Backbones partagés (MLP)
+│                               # Contient : `MLP` (2×64 tanh par défaut)
+│   └── sac_networks.py         # Réseaux SAC TensorFlow
+│                               # Contient : QNetwork, GaussianPolicy (utilisent `MLP`)
 │
 ├── training/
 │   ├── ppo.py                  # Algorithme PPO from scratch
 │   │                           # Contient : PPO.update(), calcul GAE,
 │   │                           # loss clip, loss critique, loss entropie
-│   └── rollout_buffer.py       # Buffer de trajectoires
+│   ├── sac_tf.py               # SAC TensorFlow from scratch
+│   │                           # Contient : ReplayBuffer, SACAgentTF,
+│   │                           # train_sac() et sauvegarde des checkpoints
+│   └── rollout_buffer.py       # Buffer de trajectoires PPO
 │                               # Contient : add(), get(), compute_returns()
 │
 ├── utils/
@@ -133,8 +141,13 @@ C'est la pièce centrale. Il hérite de `gymnasium.Env` et encapsule **tout** ce
 #### `models/policy_network.py`
 Contient uniquement l'architecture du réseau. Aucune logique d'entraînement ici. Le réseau est séparé en acteur (produit une distribution sur les actions) et critique (estime la valeur de l'état).
 
-#### `training/ppo.py`
-Contient uniquement la logique de mise à jour PPO. Prend un `RolloutBuffer` en entrée, retourne les métriques de loss. Ne sait rien de l'environnement.
+### PPO (logic)
+La logique de mise à jour PPO est implémentée dans `train.py` (racine) :
+`PPOTrainer` orchestre la collecte (utilise `training/rollout_buffer.py`) et les mises à jour.
+Si tu préfères une structure plus modulaire, on peut extraire `PPOTrainer` vers `training/ppo.py`.
+
+#### `training/sac_tf.py`
+Contient l'implémentation SAC en TensorFlow : `ReplayBuffer`, `SACAgentTF` et `train_sac()`.
 
 #### `training/rollout_buffer.py`
 Stocke les transitions `(s, a, r, done, log_prob, value)` collectées lors d'un rollout. Calcule les returns et avantages (GAE) à la fin de la collecte.
@@ -514,12 +527,29 @@ Encourage à tenir debout plus longtemps.
 # Entraînement headless (rapide)
 python train.py
 
+## 10bis. Training — points communs et différences (PPO vs SAC)
+
+Cette section explique d'abord ce que PPO et SAC partagent (infrastructures, fichiers, logs), puis décrit séparément comment chacun fonctionne dans le dépôt.
+
 # Avec rendu temps réel (lent mais utile pour débugger l'env)
 python train.py --render
 
 # Avec SB3 (T8, pour valider l'env)
 python train.py --sb3
+
+# Entraînement SAC en TensorFlow
+python train_sac.py
+
+# SAC avec rendu temps réel
+python train_sac.py --render
+
 ```
+
+### SAC
+
+`training/sac_tf.py` concentre la logique SAC pour éviter les doublons : le buffer, les réseaux et la boucle d'entraînement sont au même endroit, et `train_sac.py` se limite à parser les arguments puis appeler `train_sac()`.
+
+Remarque technique : PPO utilise la classe `ActorCritic` définie dans [models/policy_network.py](models/policy_network.py) (backbone partagé, tête valeur V(s), acteur qui sort mean + log_std). SAC, en revanche, requiert une politique stochastique avec correction de log-prob après `tanh` et des critiques `Q(s,a)` (twin critics). Pour cette raison le dépôt expose des réseaux dédiés à SAC dans [models/sac_networks.py](models/sac_networks.py) (`GaussianPolicy`, `QNetwork`) et `training/sac_tf.py` utilise ces classes plutôt que `ActorCritic`.
 
 ### Métriques à surveiller
 
@@ -609,6 +639,7 @@ stable-baselines3>=2.3
 tensorboard>=2.15
 numpy>=1.26
 tensorflow-probability>=0.23
+tf-keras>=2.15
 ```
 
 > **Note Box2D** : `gymnasium[box2d]` installe `box2d-py` via pip. Sur certains systèmes, il faut d'abord `apt install swig` (Linux) ou `brew install swig` (macOS).
@@ -653,3 +684,34 @@ tensorflow-probability>=0.23
 ---
 
 *BladeWalker — projet personnel d'apprentissage RL from scratch.*
+
+---
+
+## Exemples & hyperparamètres par défaut
+
+Petit rappel pratique des commandes et d'une grille d'hyperparamètres par défaut pour démarrer rapidement :
+
+### Commandes
+
+```bash
+# Entraînement PPO (headless)
+python train.py
+
+# Entraînement SAC (headless)
+python train_sac.py
+
+# Évaluation / rendu d'un checkpoint
+python evaluate.py --checkpoint checkpoints/iter_0500
+```
+
+### Hyperparamètres de départ (exemples)
+
+| Paramètre | PPO (train.py) | SAC (train_sac.py) |
+|---|---:|---:|
+| learning rate (actor/critic) | 3e-4 | actor=3e-4 / critic=3e-4 |
+| batch / rollout | n_steps=2048 / batch=64 | batch_size=256 / update_every=50 |
+| gamma | 0.99 | 0.99 |
+| entropy coeff / alpha | c2=0.01 (PPO) | auto_alpha=True (SAC) |
+| replay buffer capacity | N/A | 1e6 (deque par défaut) |
+
+Modifier les valeurs directement dans `train.py` / `train_sac.py` est la façon la plus simple de tester d'autres réglages.

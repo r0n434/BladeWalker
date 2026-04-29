@@ -99,11 +99,16 @@ Les deux partagent le backbone parce qu'ils ont besoin de la même compréhensio
 ## 4. Le backbone
 
 ```python
-self.backbone = tf.keras.Sequential([
-    tf.keras.layers.Dense(64, activation='tanh'),
-    tf.keras.layers.Dense(64, activation='tanh'),
-])
+# Shared MLP backbone (models/common_backbone.MLP)
+from .common_backbone import MLP
+
+# return the last hidden activations (feature extractor)
+self.backbone = MLP(output_dim=None, hidden=(64, 64), activation=tf.nn.tanh)
 ```
+
+> Remarque : le backbone est maintenant fourni par `models/common_backbone.MLP`.
+> Cela unifie l'architecture entre PPO et SAC tout en conservant le comportement
+> (deux couches Dense 64 avec `tanh`).
 
 Le backbone prend l'observation brute `(14,)` et la transforme en une représentation abstraite `(64,)`.
 

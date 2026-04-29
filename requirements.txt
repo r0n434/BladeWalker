@@ -5,5 +5,4 @@ pygame>=2.5
 stable-baselines3>=2.3
 tensorboard>=2.15
 numpy>=1.26
-tensorflow-probability>=0.23
-tf-keras>=2.15
+tensorflow-probability[tf]>=0.23

@@ -1,14 +1,16 @@
 import tensorflow as tf
 import tensorflow_probability as tfp
+from .common_backbone import MLP
+
 
 class ActorCritic(tf.keras.Model):
     def __init__(self, obs_dim, act_dim):
         super().__init__()
 
-        self.backbone = tf.keras.Sequential([
-            tf.keras.layers.Dense(64, activation='tanh'),
-            tf.keras.layers.Dense(64, activation='tanh'),
-        ])
+        # Use the shared MLP backbone as a feature extractor. We set
+        # output_dim=None so the MLP returns the last hidden activations
+        # (two Dense(64, tanh) layers) preserving original behavior.
+        self.backbone = MLP(output_dim=None, hidden=(64, 64), activation=tf.nn.tanh)
 
         self.actor_mean = tf.keras.layers.Dense(act_dim)
         self.critic = tf.keras.layers.Dense(1)
