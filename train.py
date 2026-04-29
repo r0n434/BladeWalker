@@ -159,7 +159,7 @@ class PPOTrainer:
             n_updates: Nombre d'itérations de mise à jour
         """
         print("=" * 70)
-        print("🤖 DÉMARRAGE DE L'ENTRAÎNEMENT PPO - BLADEWALKER")
+        print(" DÉMARRAGE DE L'ENTRAÎNEMENT PPO - BLADEWALKER")
         print("=" * 70)
         print(f"Configuration:")
         print(f"  • n_steps: {self.n_steps}")
@@ -190,38 +190,38 @@ class PPOTrainer:
                       f"Time: {elapsed:.1f}s")
         
         print("\n" + "=" * 70)
-        print("✓ ENTRAÎNEMENT TERMINÉ")
+        print(" ENTRAÎNEMENT TERMINÉ")
         print("=" * 70)
 
 
 def main():
     """Fonction principale : orchestre tout"""
     
-    # 1️⃣ INSTANCIATION DE L'ENVIRONNEMENT
-    print("1️⃣  Instanciation de l'environnement...")
+    # 1️ INSTANCIATION DE L'ENVIRONNEMENT
+    print("1️  Instanciation de l'environnement...")
     env = WalkerEnv(render_mode=None)
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.shape[0]
-    print(f"   ✓ Environnement créé")
+    print(f"    Environnement créé")
     print(f"     - Observation space: {obs_dim}")
     print(f"     - Action space: {act_dim}\n")
     
-    # 2️⃣ INSTANCIATION DU MODÈLE
-    print("2️⃣  Instanciation du modèle ActorCritic...")
+    #  INSTANCIATION DU MODÈLE
+    print(" Instanciation du modèle ActorCritic...")
     model = ActorCritic(obs_dim=obs_dim, act_dim=act_dim)
     # Effectuer un forward pass pour initialiser les poids
     dummy_obs = tf.zeros((1, obs_dim), dtype=tf.float32)
     model(dummy_obs)
-    print(f"   ✓ Modèle créé et initialisé\n")
+    print(f"    Modèle créé et initialisé\n")
     
-    # 3️⃣ INSTANCIATION DU BUFFER
-    print("3️⃣  Instanciation du RolloutBuffer...")
+    # INSTANCIATION DU BUFFER
+    print("  Instanciation du RolloutBuffer...")
     n_steps = 2048
     buffer = RolloutBuffer(n_steps=n_steps, obs_dim=obs_dim, act_dim=act_dim)
-    print(f"   ✓ Buffer créé (n_steps={n_steps})\n")
+    print(f"    Buffer créé (n_steps={n_steps})\n")
     
-    # 4️⃣ INSTANCIATION DE L'ENTRAÎNEUR PPO
-    print("4️⃣  Instanciation de l'entraîneur PPO...")
+    #  INSTANCIATION DE L'ENTRAÎNEUR PPO
+    print(" Instanciation de l'entraîneur PPO...")
     trainer = PPOTrainer(
         env=env,
         model=model,
@@ -234,10 +234,10 @@ def main():
         ent_coef=0.01,
         vf_coef=0.5
     )
-    print(f"   ✓ Entraîneur PPO créé\n")
+    print(f"    Entraîneur PPO créé\n")
     
-    # 5️⃣ LANCEMENT DE LA BOUCLE D'ENTRAÎNEMENT
-    print("5️⃣  Lancement de la boucle d'entraînement...\n")
+    #  LANCEMENT DE LA BOUCLE D'ENTRAÎNEMENT
+    print("  Lancement de la boucle d'entraînement...\n")
     trainer.train(n_updates=100)
 
 
