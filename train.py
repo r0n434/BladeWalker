@@ -60,6 +60,10 @@ class FakeWalkerEnv:
 
 env = FakeWalkerEnv()
 model = ActorCritic(obs_dim=CONFIG["obs_dim"], act_dim=CONFIG["act_dim"])
+
+dummy = tf.zeros((1, CONFIG["obs_dim"]))
+model(dummy)
+
 buffer = RolloutBuffer(
     n_steps=CONFIG["n_steps"],
     obs_dim=CONFIG["obs_dim"],
@@ -77,11 +81,8 @@ ppo = PPO(
     batch_size=CONFIG["batch_size"],
 )
 
-# Construire le modèle en appelant une fois avec un dummy input
-dummy_obs = tf.zeros((1, CONFIG["obs_dim"]), dtype=tf.float32)
-model.get_action(dummy_obs)
-
 os.makedirs(CONFIG["checkpoint_dir"], exist_ok=True)
+
 
 # ============================================================
 # ROLLOUT
