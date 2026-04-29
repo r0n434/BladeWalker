@@ -3,6 +3,7 @@ FROM python:3.11-slim
 
 # On installe les dépendances système (celles qui t'ont posé problème tout à l'heure !)
 RUN apt-get update && apt-get install -y \
+    swig \
     libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
     libfreetype6-dev libportmidi-dev libjpeg-dev \
     build-essential \
