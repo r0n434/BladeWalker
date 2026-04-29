@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BladeWalker — Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf8;
+    --bg2: #f3f2ee;
+    --bg3: #eceae4;
+    --text: #1a1a18;
+    --muted: #7a7869;
+    --border: #e0ddd5;
+    --accent-g: #16a34a;
+    --accent-b: #0369a1;
+    --accent-p: #7c3aed;
+    --accent-o: #c2410c;
+    --accent-t: #0f766e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* SIDEBAR */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 240px; min-width: 240px;
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky; top: 0; height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .sidebar-logo {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .sidebar-logo h1 {
+    font-size: 16px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .logo-badge {
+    background: var(--text); color: var(--bg);
+    padding: 2px 6px; border-radius: 4px;
+    font-size: 10px; font-weight: 500;
+  }
+  .sidebar-section { padding: 0 12px; margin-bottom: 20px; }
+  .sidebar-section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.1s;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .nav-item:hover { background: var(--bg2); color: var(--text); }
+  .nav-item.active { background: var(--text); color: var(--bg); }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* CONTENT */
+  .content { flex: 1; padding: 40px 48px; max-width: 860px; }
+
+  .page-title {
+    font-size: 28px; font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .page-subtitle {
+    font-size: 14px; color: var(--muted);
+    margin-bottom: 40px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* SECTION */
+  .section { margin-bottom: 48px; }
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ARCH DIAGRAM */
+  .arch-diagram {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    margin-bottom: 16px;
+  }
+  .arch-flow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+  }
+  .arch-module {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .module-box {
+    border-radius: 8px;
+    padding: 14px 18px;
+    text-align: center;
+    min-width: 110px;
+    border: 1.5px solid transparent;
+  }
+  .module-label {
+    font-size: 12px; font-weight: 500;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .module-sub {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .mod-env { background: #f0fdf4; border-color: #86efac; color: #14532d; }
+  .mod-model { background: #eff6ff; border-color: #93c5fd; color: #1e3a5f; }
+  .mod-ppo { background: #faf5ff; border-color: #c4b5fd; color: #3b0764; }
+  .mod-buf { background: #fff7ed; border-color: #fcd34d; color: #78350f; }
+  .mod-train { background: #f1f5f9; border-color: #94a3b8; color: #1e293b; }
+
+  .arch-arrow {
+    display: flex; align-items: center;
+    padding: 0 6px;
+    margin-top: 22px;
+    color: var(--muted); font-size: 16px;
+  }
+  .arch-label-col {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    margin-top: 8px;
+  }
+  .arch-tag {
+    font-size: 9px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    background: var(--bg3);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  /* FILES GRID */
+  .files-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .file-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .file-card:hover { border-color: #94a3b8; }
+  .file-path {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .file-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .file-tags { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+  .ftag {
+    font-size: 9px;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .ftag-g { background: #f0fdf4; color: #15803d; }
+  .ftag-b { background: #eff6ff; color: #1d4ed8; }
+  .ftag-p { background: #faf5ff; color: #7c3aed; }
+  .ftag-o { background: #fff7ed; color: #c2410c; }
+
+  /* OBSERVATION TABLE */
+  .obs-table { width: 100%; border-collapse: collapse; }
+  .obs-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .obs-table td {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--bg2);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .obs-table tr:hover td { background: var(--bg2); }
+  .obs-idx { color: var(--muted); }
+  .obs-range { color: var(--accent-b); }
+  .obs-type-cont { color: var(--accent-p); }
+  .obs-type-bin { color: var(--accent-g); }
+
+  /* TASK LIST */
+  .task-group { margin-bottom: 20px; }
+  .task-group-title {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .task-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 4px;
+  }
+  .task-done { background: #f0fdf4; color: #166534; }
+  .task-todo { background: var(--bg2); color: var(--muted); }
+  .task-wip { background: #fffbeb; color: #92400e; }
+  .check-icon { font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <h1>🦿 BladeWalker <span class="logo-badge">v0.1</span></h1>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Navigation</div>
+      <div class="nav-item active">
+        <div class="nav-dot" style="background:#16a34a;"></div>
+        Architecture
+      </div>
+      <div class="nav-item">
+        <div class="nav-dot" style="background:#0369a1;"></div>
+        Environnement
+      </div>
+      <div class="nav-item">
+        <div class="nav-dot" style="background:#7c3aed;"></div>
+        ActorCritic
+      </div>
+      <div class="nav-item">
+        <div class="nav-dot" style="background:#c2410c;"></div>
+        PPO
+      </div>
+      <div class="nav-item">
+        <div class="nav-dot" style="background:#0f766e;"></div>
+        RolloutBuffer
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Dev</div>
+      <div class="nav-item">train.py</div>
+      <div class="nav-item">evaluate.py</div>
+      <div class="nav-item">Installation</div>
+      <div class="nav-item">Pièges fréquents</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Références</div>
+      <div class="nav-item">PPO Paper</div>
+      <div class="nav-item">GAE Paper</div>
+      <div class="nav-item">Gymnasium docs</div>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <h1 class="page-title">Architecture du projet</h1>
+    <p class="page-subtitle">Reinforcement Learning — PPO from scratch · TensorFlow · Box2D · Gymnasium</p>
+
+    <!-- ARCH OVERVIEW -->
+    <div class="section">
+      <div class="section-title">Vue d'ensemble — boucle RL</div>
+      <div class="arch-diagram">
+        <div class="arch-flow">
+          <div class="arch-module">
+            <div class="module-box mod-train">
+              <div class="module-label">train.py</div>
+              <div class="module-sub">Orchestrateur</div>
+            </div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-module">
+            <div class="module-box mod-env">
+              <div class="module-label">WalkerEnv</div>
+              <div class="module-sub">Gym · Box2D</div>
+            </div>
+            <div style="font-size:9px;color:#16a34a;font-family:'IBM Plex Mono',monospace;text-align:center;">obs (14,)<br>reward · done</div>
+          </div>
+          <div class="arch-arrow">⇄</div>
+          <div class="arch-module">
+            <div class="module-box mod-model">
+              <div class="module-label">ActorCritic</div>
+              <div class="module-sub">TensorFlow</div>
+            </div>
+            <div style="font-size:9px;color:#1d4ed8;font-family:'IBM Plex Mono',monospace;text-align:center;">action (4,)<br>log_prob · value</div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-module">
+            <div class="module-box mod-buf">
+              <div class="module-label">RolloutBuffer</div>
+              <div class="module-sub">2048 steps</div>
+            </div>
+            <div style="font-size:9px;color:#c2410c;font-family:'IBM Plex Mono',monospace;text-align:center;">GAE · returns<br>advantages</div>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-module">
+            <div class="module-box mod-ppo">
+              <div class="module-label">PPO</div>
+              <div class="module-sub">10 epochs · 64 bs</div>
+            </div>
+            <div style="font-size:9px;color:#7c3aed;font-family:'IBM Plex Mono',monospace;text-align:center;">clip loss<br>gradient step</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILES -->
+    <div class="section">
+      <div class="section-title">Fichiers du projet</div>
+      <div class="files-grid">
+        <div class="file-card">
+          <div class="file-path" style="color:#16a34a;">envs/walker_env.py</div>
+          <div class="file-desc">Environnement Gymnasium custom. Corps Box2D, joints motorisés, reward, détection de chute.</div>
+          <div class="file-tags">
+            <span class="ftag ftag-g">obs (14,)</span>
+            <span class="ftag ftag-g">action (4,)</span>
+            <span class="ftag ftag-g">Box2D</span>
+          </div>
+        </div>
+        <div class="file-card">
+          <div class="file-path" style="color:#1d4ed8;">models/policy_network.py</div>
+          <div class="file-desc">Réseau ActorCritic TF. Backbone Dense 64×2, tête acteur gaussienne, tête critique, log_std appris.</div>
+          <div class="file-tags">
+            <span class="ftag ftag-b">get_action()</span>
+            <span class="ftag ftag-b">evaluate_actions()</span>
+            <span class="ftag ftag-b">TensorFlow</span>
+          </div>
+        </div>
+        <div class="file-card">
+          <div class="file-path" style="color:#7c3aed;">training/ppo.py</div>
+          <div class="file-desc">Algorithme PPO from scratch. Clip surrogate loss, loss critique MSE, bonus entropie, gradient clipping.</div>
+          <div class="file-tags">
+            <span class="ftag ftag-p">clip_eps=0.2</span>
+            <span class="ftag ftag-p">GradientTape</span>
+            <span class="ftag ftag-p">on-policy</span>
+          </div>
+        </div>
+        <div class="file-card">
+          <div class="file-path" style="color:#c2410c;">training/rollout_buffer.py</div>
+          <div class="file-desc">Buffer de trajectoires. Stocke 2048 transitions, calcule GAE et returns, fournit mini-batches shuffled.</div>
+          <div class="file-tags">
+            <span class="ftag ftag-o">GAE λ=0.95</span>
+            <span class="ftag ftag-o">γ=0.99</span>
+            <span class="ftag ftag-o">n_steps=2048</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OBS SPACE -->
+    <div class="section">
+      <div class="section-title">Observation space — shape (14,)</div>
+      <table class="obs-table">
+        <thead>
+          <tr>
+            <th>idx</th>
+            <th>Valeur</th>
+            <th>Range</th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="obs-idx">0</td><td>Angle torse</td><td class="obs-range">[-π, π]</td><td class="obs-type-cont">continu</td></tr>
+          <tr><td class="obs-idx">1</td><td>Vitesse angulaire torse</td><td class="obs-range">[-∞, ∞]</td><td class="obs-type-cont">continu</td></tr>
+          <tr><td class="obs-idx">2</td><td>Vitesse horizontale torse</td><td class="obs-range">[-∞, ∞]</td><td class="obs-type-cont">continu</td></tr>
+          <tr><td class="obs-idx">3</td><td>Vitesse verticale torse</td><td class="obs-range">[-∞, ∞]</td><td class="obs-type-cont">continu</td></tr>
+          <tr><td class="obs-idx">4–5</td><td>Hanche gauche — angle / vit.ang.</td><td class="obs-range">[-π, π]</td><td class="obs-type-cont">continu</td></tr>
+          <tr><td class="obs-idx">6–7</td><td>Genou gauche — angle / vit.ang.</td><td class="obs-range">[-π, π]</td><td class="obs-type-cont">continu</td></tr>
+          <tr><td class="obs-idx">8</td><td>Contact sol — jambe gauche</td><td class="obs-range">{0, 1}</td><td class="obs-type-bin">binaire</td></tr>
+          <tr><td class="obs-idx">9–10</td><td>Hanche droite — angle / vit.ang.</td><td class="obs-range">[-π, π]</td><td class="obs-type-cont">continu</td></tr>
+          <tr><td class="obs-idx">11–12</td><td>Genou droit — angle / vit.ang.</td><td class="obs-range">[-π, π]</td><td class="obs-type-cont">continu</td></tr>
+          <tr><td class="obs-idx">13</td><td>Contact sol — jambe droite</td><td class="obs-range">{0, 1}</td><td class="obs-type-bin">binaire</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TASK LIST -->
+    <div class="section">
+      <div class="section-title">Plan de développement</div>
+      <div class="task-group">
+        <div class="task-group-title">Setup & Environnement</div>
+        <div class="task-item task-done"><span class="check-icon">✓</span> T0 — Init projet, venv, requirements.txt</div>
+        <div class="task-item task-done"><span class="check-icon">✓</span> T1 — Squelette WalkerEnv + observation/action spaces</div>
+        <div class="task-item task-done"><span class="check-icon">✓</span> T2 — Corps Box2D (torse + 2 jambes, joints motorisés)</div>
+        <div class="task-item task-todo"><span class="check-icon">○</span> T3 — reset() + step() + détection de chute</div>
+        <div class="task-item task-todo"><span class="check-icon">○</span> T4 — Reward function (itération progressive)</div>
+        <div class="task-item task-todo"><span class="check-icon">○</span> T5 — Validation avec actions random + rendu</div>
+      </div>
+      <div class="task-group">
+        <div class="task-group-title">Réseau & Entraînement</div>
+        <div class="task-item task-done"><span class="check-icon">✓</span> T6 — ActorCritic TF (backbone + têtes + log_std)</div>
+        <div class="task-item task-done"><span class="check-icon">✓</span> T7 — RolloutBuffer (stockage, GAE, batches)</div>
+        <div class="task-item task-wip"><span class="check-icon">⟳</span> T9 — PPO from scratch (clip + GAE + entropie)</div>
+        <div class="task-item task-wip"><span class="check-icon">⟳</span> T10 — train.py boucle principale + checkpoints</div>
+      </div>
+      <div class="task-group">
+        <div class="task-group-title">Monitoring</div>
+        <div class="task-item task-todo"><span class="check-icon">○</span> T11 — Logger TensorBoard</div>
+        <div class="task-item task-todo"><span class="check-icon">○</span> T12 — RecordVideo wrapper</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>
