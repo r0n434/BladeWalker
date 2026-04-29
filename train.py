@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from models.policy_network import ActorCritic
 from training.rollout_buffer import RolloutBuffer
 from training.ppo import PPO
+from envs.walker_env import WalkerEnv
 
 CONFIG = {
     # Env
@@ -33,32 +34,12 @@ CONFIG = {
     "checkpoint_dir" : "checkpoints",
 }
 
-# ============================================================
-# ENV FICTIF — à remplacer par WalkerEnv quand prêt
-# ============================================================
-class FakeWalkerEnv:
-    def __init__(self):
-        self.observation_space_shape = (CONFIG["obs_dim"],)
-        self.action_space_shape      = (CONFIG["act_dim"],)
-
-    def reset(self):
-        obs = np.zeros(CONFIG["obs_dim"], dtype=np.float32)
-        return obs, {}
-
-    def step(self, action):
-        obs        = np.random.randn(CONFIG["obs_dim"]).astype(np.float32)
-        reward     = float(np.random.randn())
-        terminated = False
-        truncated  = False
-        info       = {}
-        return obs, reward, terminated, truncated, info
-
 
 # ============================================================
 # INSTANCIATION
 # ============================================================
 
-env = FakeWalkerEnv()
+env = WalkerEnv()
 model = ActorCritic(obs_dim=CONFIG["obs_dim"], act_dim=CONFIG["act_dim"])
 
 dummy = tf.zeros((1, CONFIG["obs_dim"]))
