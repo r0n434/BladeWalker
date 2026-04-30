@@ -165,16 +165,16 @@ class SACAgentTF:
 
     def save(self, path_prefix):
         # save weights
-        self.actor.save_weights(path_prefix + '_actor.h5')
-        self.critic_1.save_weights(path_prefix + '_critic1.h5')
-        self.critic_2.save_weights(path_prefix + '_critic2.h5')
+        self.actor.save_weights(path_prefix + '_actor.weights.h5')
+        self.critic_1.save_weights(path_prefix + '_critic1.weights.h5')
+        self.critic_2.save_weights(path_prefix + '_critic2.weights.h5')
         if self.auto_alpha:
             np.save(path_prefix + '_log_alpha.npy', self.log_alpha.numpy())
 
     def load(self, path_prefix):
-        self.actor.load_weights(path_prefix + '_actor.h5')
-        self.critic_1.load_weights(path_prefix + '_critic1.h5')
-        self.critic_2.load_weights(path_prefix + '_critic2.h5')
+        self.actor.load_weights(path_prefix + '_actor.weights.h5')
+        self.critic_1.load_weights(path_prefix + '_critic1.weights.h5')
+        self.critic_2.load_weights(path_prefix + '_critic2.weights.h5')
         self.critic_1_target.set_weights(self.critic_1.get_weights())
         self.critic_2_target.set_weights(self.critic_2.get_weights())
         if self.auto_alpha:
