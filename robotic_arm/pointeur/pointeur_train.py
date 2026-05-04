@@ -1,6 +1,6 @@
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.env_util import make_vec_env
-from robot_arm_env import RoboticArmEnv
+from pointeur_env import RoboticArmPointeurEnv
 from stable_baselines3 import PPO, SAC
 import argparse
 
@@ -15,7 +15,7 @@ def PPO_train(segment_lengths=[1.0, 1.0], total_timesteps=500000, policy_kwargs=
     - Architecture : Nécessite moins de calculs, un réseau de [64, 64] est souvent suffisant.
     """
     env_kwargs = {"segment_lengths": segment_lengths}
-    vec_env = make_vec_env(RoboticArmEnv, n_envs=n_envs, env_kwargs=env_kwargs)
+    vec_env = make_vec_env(RoboticArmPointeurEnv, n_envs=n_envs, env_kwargs=env_kwargs)
 
     for i in range(n_envs):
         vec_env.env_method("set_difficulty", 0.1, indices=i)
@@ -48,7 +48,7 @@ def SAC_train(segment_lengths=[1.0, 1.0], total_timesteps=200000, policy_kwargs=
     - Sample Efficient : Apprend plus vite (nécessite moins d'étapes) mais fait plus de calculs par étape.
     """
 
-    env = RoboticArmEnv(segment_lengths=segment_lengths)
+    env = RoboticArmPointeurEnv(segment_lengths=segment_lengths)
 
     env.set_difficulty(0.1)
 
