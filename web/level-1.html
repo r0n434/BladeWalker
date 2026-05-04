@@ -1,0 +1,200 @@
+<!-- <!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StepByStep SMART</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.add('light-mode');
+        }
+    </script>
+</head>
+<body>
+    <canvas id="canvas-bg"></canvas>
+
+    <header id="main-nav" class="top-header scrolled">
+        <div class="nav-title" style="opacity: 1; transform: translateX(0);">STEP BY STEP<span class="project-title">Projet SMART 2026</span></div>
+        <button id="theme-toggle" class="theme-btn" aria-label="Changer de thème">☀️</button>
+        <img src="img/insa_lyon.png" alt="Logo de l'école" class="school-logo" onerror="this.style.display='none'">
+    </header>
+
+    <div class="main-wrapper dashboard-wrapper">
+        <div class="dashboard-container">
+            
+        
+            <div class="dashboard-left">
+                <div class="video-container">
+                
+                    <video id="ai-video" loop muted poster="img/robot_arm.png">
+                        <source src="votre-video-rex.mp4" type="video/mp4">
+                        Votre navigateur ne supporte pas la balise vidéo.
+                    </video>
+                    
+                    <div class="video-controls">
+                        <button id="play-pause-btn" class="control-btn">▶️ LECTURE</button>
+                    </div>
+                </div>
+            </div>
+
+        
+            <div class="dashboard-right">
+                <h2>Niveau 1 : Tâtonnements</h2>
+                <p class="level-description">
+                    Ajustez les paramètres de récompense et observez comment l'algorithme modifie le comportement de R.E.X.
+                </p>
+
+            
+                <div class="settings-panel">
+                    
+                
+                    <div class="setting-group">
+                        <label>Algorithme d'apprentissage</label>
+                        <div class="toggle-container">
+                            <input type="radio" id="algo-ppo" name="algo" value="PPO" checked>
+                            <label for="algo-ppo" class="toggle-label">PPO</label>
+                            
+                            <input type="radio" id="algo-sac" name="algo" value="SAC">
+                            <label for="algo-sac" class="toggle-label">SAC</label>
+                        </div>
+                    </div>
+
+                
+                    <div class="setting-group">
+                        <label for="energy-penalty">Pénalité d'énergie : <span id="energy-val" class="val-badge">Moyen</span></label>
+                        <input type="range" id="energy-penalty" class="dashboard-slider" min="1" max="3" step="1" value="2">
+                        <div class="slider-labels"><span>Faible</span><span>Moyen</span><span>Forte</span></div>
+                    </div>
+
+                
+                    <div class="setting-group">
+                        <label for="shake-penalty">Pénalité de tremblement : <span id="shake-val" class="val-badge">Moyen</span></label>
+                        <input type="range" id="shake-penalty" class="dashboard-slider" min="1" max="3" step="1" value="2">
+                        <div class="slider-labels"><span>Faible</span><span>Moyen</span><span>Forte</span></div>
+                    </div>
+                </div>
+
+            
+                <div class="training-section">
+                    <button id="train-btn" class="btn-start">LANCER L'ENTRAÎNEMENT (0/3)</button>
+                    <p id="train-status" class="status-msg">En attente de paramètres...</p>
+                </div>
+
+            
+                <a href="page-suivante.html" class="back-link">⬅ Retour à la carte</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StepByStep SMART</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.add('light-mode');
+        }
+    </script>
+</head>
+<body class="no-scroll"> <!-- NOUVEAU: Classe pour bloquer le scroll -->
+    <canvas id="canvas-bg"></canvas>
+
+    <header id="main-nav" class="top-header scrolled">
+        <div class="nav-title" style="opacity: 1; transform: translateX(0);">STEP BY STEP<span class="project-title">Projet SMART 2026</span></div>
+        <button id="theme-toggle" class="theme-btn" aria-label="Changer de thème">☀️</button>
+        <img src="img/insa_lyon.png" alt="Logo de l'école" class="school-logo" onerror="this.style.display='none'">
+    </header>
+
+    <div class="dashboard-wrapper full-page">
+        <div class="dashboard-container yt-layout">
+            
+            <!-- Colonne Gauche : Vidéo (Prend un maximum de place) -->
+            <div class="dashboard-left">
+                <!-- Bouton retour en haut à gauche de la zone vidéo -->
+                <a href="map.html" class="back-link">⬅ Retour à la carte</a>
+                
+                <div class="video-container">
+                    <video id="ai-video" loop muted poster="img/robot_arm.png">
+                        <source src="votre-video-rex.mp4" type="video/mp4">
+                        Votre navigateur ne supporte pas la balise vidéo.
+                    </video>
+                    
+                    <!-- Barre de contrôle sous la vidéo -->
+                    <div class="video-controls">
+                        <!-- Play/Pause complètement à gauche -->
+                        <button id="play-pause-btn" class="control-btn">▶️ LECTURE</button>
+                        
+                        <!-- Entraînement complètement à droite -->
+                        <div class="training-group">
+                            <span id="train-status" class="status-msg">En attente de paramètres...</span>
+                            <button id="train-btn" class="btn-start small-train-btn">LANCER L'ENTRAÎNEMENT (0/3)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne Droite : Paramètres -->
+            <div class="dashboard-right">
+                <div class="settings-header">
+                    <h2>Niveau 1</h2>
+                    <p class="level-description">Ajustez les paramètres et observez l'impact sur R.E.X.</p>
+                </div>
+
+                <div class="settings-panel">
+                    <!-- Toggle PPO / SAC avec Info-bulle -->
+                    <div class="setting-group">
+                        <label>
+                            Algorithme
+                            <div class="info-tooltip">ℹ️
+                                <span class="tooltip-text"><b>PPO</b> est prudent et apprend pas à pas. <b>SAC</b> est plus créatif et explore davantage.</span>
+                            </div>
+                        </label>
+                        <div class="toggle-container">
+                            <input type="radio" id="algo-ppo" name="algo" value="PPO" checked>
+                            <label for="algo-ppo" class="toggle-label">PPO</label>
+                            <input type="radio" id="algo-sac" name="algo" value="SAC">
+                            <label for="algo-sac" class="toggle-label">SAC</label>
+                        </div>
+                    </div>
+
+                    <!-- Slider 1 : Énergie avec Info-bulle -->
+                    <div class="setting-group">
+                        <label for="energy-penalty">
+                            Pénalité d'énergie : <span id="energy-val" class="val-badge">Moyen</span>
+                            <div class="info-tooltip">ℹ️
+                                <span class="tooltip-text">Définit si l'IA est punie lorsqu'elle fait de grands mouvements qui consomment beaucoup d'énergie.</span>
+                            </div>
+                        </label>
+                        <input type="range" id="energy-penalty" class="dashboard-slider" min="1" max="3" step="1" value="2">
+                        <div class="slider-labels"><span>Faible</span><span>Moyen</span><span>Forte</span></div>
+                    </div>
+
+                    <!-- Slider 2 : Tremblement avec Info-bulle -->
+                    <div class="setting-group">
+                        <label for="shake-penalty">
+                            Pénalité de tremblement : <span id="shake-val" class="val-badge">Moyen</span>
+                            <div class="info-tooltip">ℹ️
+                                <span class="tooltip-text">Empêche le robot d'avoir des mouvements saccadés en le forçant à être fluide.</span>
+                            </div>
+                        </label>
+                        <input type="range" id="shake-penalty" class="dashboard-slider" min="1" max="3" step="1" value="2">
+                        <div class="slider-labels"><span>Faible</span><span>Moyen</span><span>Forte</span></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>

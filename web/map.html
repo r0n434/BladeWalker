@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StepByStep SMART</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.add('light-mode');
+        }
+    </script>
+</head>
+<body>
+    <canvas id="canvas-bg"></canvas>
+
+    <header id="main-nav" class="top-header scrolled">
+        <div class="nav-title" style="opacity: 1; transform: translateX(0);"><a class="nav-link" href="index.html">STEP BY STEP<span class="project-title">Projet SMART 2026</span></a></div>
+        <button id="theme-toggle" class="theme-btn" aria-label="Changer de thème">☀️</button>
+        <img src="img/insa_lyon.png" alt="Logo de l'école" class="school-logo" onerror="this.style.display='none'">
+    </header>
+
+    <div class="map-wrapper">
+        <div class="map-container">
+            
+            <div id="map-layer">
+
+                <svg id="map-paths" width="100%" height="100%"></svg>
+                
+                <div id="nodes-container"></div>
+
+                <div id="avatar" class="avatar">🤖</div>
+            </div>
+            
+            <div class="level-info-panel" id="info-panel">
+                <h2 id="level-title">Zone de Départ</h2>
+                <p id="level-desc">Prêt à entraîner R.E.X. ? Utilisez les flèches (⬅️ ➡️) ou cliquez sur les niveaux pour avancer.</p>
+                <a href="#" id="level-btn" class="btn-start" style="display: none;">LANCER LE NIVEAU</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>

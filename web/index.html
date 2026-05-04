@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StepByStep SMART</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.add('light-mode');
+        }
+    </script>
+</head>
+<body>
+    <canvas id="canvas-bg"></canvas>
+
+    <header id="main-nav" class="top-header">
+        <div class="nav-title">STEP BY STEP<span class="project-title">Projet SMART 2026</span></div>
+        <button id="theme-toggle" class="theme-btn" aria-label="Changer de thème">☀️</button>
+        <img src="img/insa_lyon.png" alt="Logo de l'école" class="school-logo">
+    </header>
+
+    <div class="main-wrapper">
+
+        <section id="hero" class="hero-section">
+            <div class="band text-center">
+                <div class="container">
+                    <h1>STEP BY STEP</h1>
+                    <h3>Projet SMART 2026</h3>
+                    <p class="slogan">Comprendre le Reinforcement Learning, un mouvement à la fois.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- <section id="presentation" class="content-section">
+            <div class="band">
+                <div class="container flex-container">
+                    <div class="text-content">
+                        <h2>De l'erreur naît l'intelligence</h2>
+                        <p>Découvrez comment l'algorithme PPO optimise chaque mouvement. Dans ce projet, nous avons entraîné un bras robotique à accomplir des tâches complexes en utilisant le Reinforcement Learning (apprentissage par renforcement).</p>
+                        <p>Au lieu de programmer chaque articulation, nous récompensons l'IA lorsqu'elle se rapproche de son objectif, et la pénalisons lorsqu'elle échoue. Observez son évolution, de ses premiers mouvements erratiques jusqu'à la maîtrise parfaite.</p>
+                    </div>
+                    <div class="image-content">
+                        <img src="img/robot_arm.png" alt="Bras robotique en action">
+                    </div>
+                </div>
+            </div>
+        </section> -->
+
+        <section id="presentation" class="content-section">
+            <div class="band">
+                <div class="container flex-container">
+                    
+                    <div class="text-content">
+                        <h2>De l'erreur naît l'intelligence</h2>
+                        
+                        <p>Il est fascinant de voir comment les mathématiques nous permettent aujourd'hui de répliquer l'apprentissage humain chez les machines. L'idée derrière l'<strong>apprentissage par renforcement</strong> est étonnamment intuitive : on laisse notre IA essayer de réaliser une tâche par elle-même, à l'aveugle.</p>
+                        
+                        <p>Si elle fait un mouvement qui la rapproche de son objectif, on la récompense. Si elle se trompe... pas de friandise ! À force de tâtonnements, le robot finit par déduire la meilleure stratégie.</p>
+                        
+                        <p>Au cours de notre exploration, nous avons testé différentes "psychologies" d'apprentissage. Certaines méthodes poussent l'IA à être <strong>créative</strong>, en explorant ses limites de façon audacieuse, tandis que d'autres lui apprennent à progresser de manière <strong>prudente</strong> et méthodique, pas à pas.</p>
+                        
+                        <p>Pour mener à bien ces expériences, nous avons donné vie à notre propre cobaye : un bras robotique nommé <strong>R.E.X.</strong> et nous l'avons entraîné à maîtriser plusieurs tâches pour observer cette évolution de nos propres yeux.</p>
+                        
+                        <p class="slogan" style="margin-top: 30px;">
+                            Mais d'ailleurs... pourquoi se limiter à entraîner un simple bras quand on peut carrément <em>apprendre à courir</em> ?
+                        </p>
+                    </div>
+
+                    <div class="image-content">
+                        <img src="img/robot_arm.png" alt="Bras robotique en action">
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="action" class="cta-section">
+            <div class="band text-center">
+                <div class="container">
+                    <h2>Prêt à voir l'IA en action ?</h2>
+                    <p>Parcourez nos différentes versions du bras robotique et analysez ses apprentissages.</p>
+                    <a href="map.html" class="btn-start">COMMENCER L'EXPÉRIENCE</a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
