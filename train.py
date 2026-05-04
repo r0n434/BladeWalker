@@ -16,7 +16,7 @@ CONFIG = {
     "act_dim"        : 4,
 
     # Rollout
-    "n_steps"        : 2048,
+    "n_steps"        : 512,
 
     # PPO
     "lr"             : 3e-4,
