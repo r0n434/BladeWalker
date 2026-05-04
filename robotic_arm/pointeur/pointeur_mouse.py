@@ -15,7 +15,7 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-env = RoboticArmPointeurEnv(segment_lengths=[1.0, 1.0, 1.0])
+env = RoboticArmPointeurEnv(segment_lengths=[1.0, 1.0])
 
 algo_class = SAC if args.algo.upper() == "SAC" else PPO
 

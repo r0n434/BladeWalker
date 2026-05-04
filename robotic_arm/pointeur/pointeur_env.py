@@ -2,6 +2,7 @@ import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
 import pygame
+import math
 
 class RoboticArmPointeurEnv(gym.Env):
     
@@ -52,11 +53,18 @@ class RoboticArmPointeurEnv(gym.Env):
         # Le mode par défaut de Gymnasium est "none", surtout utilisé pour l'entraînement sans affichage.
         # Ici on veut voir le bras bouger, donc on utilise "human" pour afficher une fenêtre et brider le nombre de frames par seconde.
 
-        # self.window_size = 600 # Taille de la fenêtre d'affichage
-        # self.window = None # Fenêtre Pygame (sera créée au premier appel de render)
-        # self.clock = None # Horloge pour limiter le nombre de frames par seconde
-        # self.scale = (self.window_size / 2) / (max_reach * 1.2) # Facteur de conversion entre les coordonnées physiques (mètres) et les pixels pour l'affichage
+        self.window_size = 600 # Taille de la fenêtre d'affichage
+        self.window = None # Fenêtre Pygame (sera créée au premier appel de render)
+        self.clock = None # Horloge pour limiter le nombre de frames par seconde
+        self.scale = (self.window_size / 2) / (max_reach * 1.2) # Facteur de conversion entre les coordonnées physiques (mètres) et les pixels pour l'affichage
         
+        self.gfx_config = {
+            'base':        {'path': '../img/arm-base.png',       'scale': 0.3, 'pivot_x': 250, 'pivot_y': 125},
+            'section':     {'path': '../img/arm-section.png',    'scale': 0.3, 'pivot_x': 80, 'pivot_y': 250},
+            'claw_open':   {'path': '../img/arm-open-claw.png',  'scale': 0.2, 'pivot_x': 240, 'pivot_y': 260},
+            'claw_closed': {'path': '../img/arm-close-claw.png', 'scale': 0.2, 'pivot_x': 240, 'pivot_y': 260},
+        }
+        self.loaded_images = {} # Dictionnaire pour stocker les images chargées
 
 
     def set_difficulty(self, difficulty):
@@ -189,78 +197,150 @@ class RoboticArmPointeurEnv(gym.Env):
         
         return obs, reward, terminated, truncated, {"distance_to_target": distance, "energy_penalty": energy_penalty, "jitter_penalty": jitter_penalty} 
     
-    # # La fonction render() est appelée pour afficher l'état actuel de l'environnement à l'écran
-    # def render(self):
 
-    #     if self.window is None:
-    #         pygame.init()
-    #         pygame.display.init()
-    #         self.window = pygame.display.set_mode((self.window_size, self.window_size))
-    #         pygame.display.set_caption("RL Robot Arm")
-    #         self.clock = pygame.time.Clock()
-
-    #     self.window.fill((255, 255, 255))
-
-    #     def to_pixels(x, y):
-
-    #         px = int(self.window_size / 2 + x * self.scale)
-    #         py = int(self.window_size / 2 - y * self.scale)
-    #         return (px, py)
-
-    #     target_px = to_pixels(self.target_pos[0], self.target_pos[1])
-    #     pygame.draw.circle(self.window, (255, 0, 0), target_px, 10)
-
-    #     joint_positions = [(0.0, 0.0)] 
-    #     cumulative_angle = 0.0
+    def draw_image_with_pivot(self, surface, image, pos_screen, pivot_image, angle_degrees):
+        """ Dessine une image tournée autour d'un pivot spécifique. """
+        image_rect = image.get_rect()
         
-    #     x, y = 0.0, 0.0
-    #     for i in range(self.number_links):
-    #         cumulative_angle += self.angles[i]
-    #         x += self.segment_lengths[i] * np.cos(cumulative_angle)
-    #         y += self.segment_lengths[i] * np.sin(cumulative_angle)
-    #         joint_positions.append((x, y))
-
-    #     for i in range(len(joint_positions) - 1):
-    #         p1 = to_pixels(*joint_positions[i])
-    #         p2 = to_pixels(*joint_positions[i+1])
-            
-    #         pygame.draw.line(self.window, (0, 0, 0), p1, p2, 5)
-            
-    #         pygame.draw.circle(self.window, (0, 0, 255), p1, 8)
-
-    #     end_effector_px = to_pixels(*joint_positions[-1])
-    #     pygame.draw.circle(self.window, (0, 255, 0), end_effector_px, 8)
-
-    #     pygame.display.flip()
+        # Vecteur entre le centre de l'image et le pivot choisi
+        pivot_vector = pygame.math.Vector2(pivot_image) - image_rect.center
         
-    #     self.clock.tick(30)
+        # Rotation de l'image
+        rotated_image = pygame.transform.rotate(image, angle_degrees)
+        
+        # On tourne également le vecteur pivot (Pygame tourne en anti-horaire, le repère Y est inversé)
+        rotated_pivot_vector = pivot_vector.rotate(-angle_degrees)
+        
+        # On calcule le nouveau centre pour que le pivot reste exactement sur 'pos_screen'
+        rotated_rect = rotated_image.get_rect(center=pos_screen - rotated_pivot_vector)
+        
+        surface.blit(rotated_image, rotated_rect)
 
-    # # La fonction close() est appelée pour fermer proprement la fenêtre d'affichage
-    # def close(self):
-    #     """Ferme proprement la fenêtre Pygame."""
-    #     if self.window is not None:
-    #         pygame.quit()
-    #         self.window = None
-    #         self.clock = None
+    # La fonction render() est appelée pour afficher l'état actuel de l'environnement à l'écran
+    def render(self):
+        if self.window is None:
+            pygame.init()
+            pygame.display.init()
+            self.window = pygame.display.set_mode((self.window_size, self.window_size))
+            pygame.display.set_caption("RL Robot Arm")
+            self.clock = pygame.time.Clock()
 
-# if __name__ == "__main__":
-#     env = RoboticArmPointeurEnv(segment_lengths=[1.0, 1.0])
-#     obs, info = env.reset()
+        # Chargement des images si ce n'est pas encore fait
+        if not self.loaded_images:
+            for key, config in self.gfx_config.items():
+                try:
+                    img = pygame.image.load(config['path']).convert_alpha()
+                    
+                    if 'crop_percent' in config:
+                        w, h = img.get_size()
+                        new_w = max(1, int(w * config['crop_percent']))
+                        # subsurface permet de ne garder qu'une portion de l'image (de x=0 à x=new_w)
+                        img = img.subsurface((0, 0, new_w, h)).copy()
+
+                    # Mise à l'échelle
+                    if config['scale'] != 1.0:
+                        w, h = img.get_size()
+                        img = pygame.transform.smoothscale(img, (int(w * config['scale']), int(h * config['scale'])))
+                    
+                    self.loaded_images[key] = img
+                except FileNotFoundError:
+                    print(f"Attention: {config['path']} introuvable. Remplacement par un rectangle magenta.")
+                    surf = pygame.Surface((100, 20), pygame.SRCALPHA)
+                    surf.fill((255, 0, 255))
+                    self.loaded_images[key] = surf
+
+        # Fond blanc
+        self.window.fill((255, 255, 255))
+
+        def to_pixels(x, y):
+            px = int(self.window_size / 2 + x * self.scale)
+            py = int(self.window_size / 2 - y * self.scale)
+            return pygame.math.Vector2(px, py)
+
+        # Dessiner la cible
+        target_px = to_pixels(self.target_pos[0], self.target_pos[1])
+        pygame.draw.circle(self.window, (255, 0, 0), (int(target_px.x), int(target_px.y)), 10)
+
+        # Calculer les positions globales des articulations
+        joint_positions = [(0.0, 0.0)] 
+        cumulative_angle = 0.0
+        x, y = 0.0, 0.0
+        
+        for i in range(self.number_links):
+            cumulative_angle += self.angles[i]
+            x += self.segment_lengths[i] * np.cos(cumulative_angle)
+            y += self.segment_lengths[i] * np.sin(cumulative_angle)
+            joint_positions.append((x, y))
+
+        # Dessiner la BASE
+        base_pos = to_pixels(0.0, 0.0)
+        base_img = self.loaded_images['base']
+        base_pivot = (self.gfx_config['base']['pivot_x'] * self.gfx_config['base']['scale'], 
+                      self.gfx_config['base']['pivot_y'] * self.gfx_config['base']['scale'])
+        self.draw_image_with_pivot(self.window, base_img, base_pos, base_pivot, 0) # Angle 0 car fixe
+
+        # Dessiner les SEGMENTS du bras
+        cumulative_angle = 0.0
+        for i in range(self.number_links):
+            cumulative_angle += self.angles[i]
+            angle_deg = math.degrees(cumulative_angle)
+            
+            p_joint = to_pixels(*joint_positions[i])
+            
+            key = 'last_section' if i == self.number_links - 1 else 'section'
+            img_section = self.loaded_images[key]
+            
+            pivot_section = (self.gfx_config[key]['pivot_x'] * self.gfx_config[key]['scale'], 
+                             self.gfx_config[key]['pivot_y'] * self.gfx_config[key]['scale'])
+            
+            self.draw_image_with_pivot(self.window, img_section, p_joint, pivot_section, angle_deg)
+            
+            # Petit cercle de débogage optionnel pour bien voir si ton pivot est centré
+            # pygame.draw.circle(self.window, (0, 0, 255), (int(p_joint.x), int(p_joint.y)), 5)
+
+        # Dessiner la PINCE (ouverte ou fermée)
+        end_pos = self.get_end_arm_pos()
+        dist = np.linalg.norm(end_pos - self.target_pos)
+        
+        # Animation conditionnelle : on ferme la pince si on est sur la cible
+        claw_key = 'claw_closed' if dist < 0.1 else 'claw_open'
+        
+        claw_img = self.loaded_images[claw_key]
+        claw_pivot = (self.gfx_config[claw_key]['pivot_x'] * self.gfx_config[claw_key]['scale'], 
+                      self.gfx_config[claw_key]['pivot_y'] * self.gfx_config[claw_key]['scale'])
+        
+        p_end = to_pixels(*joint_positions[-1])
+        claw_angle_deg = math.degrees(cumulative_angle) # La pince suit l'angle du dernier segment
+        
+        self.draw_image_with_pivot(self.window, claw_img, p_end, claw_pivot, claw_angle_deg)
+
+        pygame.display.flip()
+        self.clock.tick(30)
+
+    def close(self):
+        if self.window is not None:
+            pygame.quit()
+            self.window = None
+            self.clock = None
+
+if __name__ == "__main__":
+    env = RoboticArmPointeurEnv(segment_lengths=[1.0, 1.0])
+    obs, info = env.reset()
     
-#     env.render() 
+    env.render() 
     
-#     for step in range(300):
-#         for event in pygame.event.get():
-#             if event.type == pygame.QUIT:
-#                 env.close()
-#                 exit()
+    for step in range(300):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                env.close()
+                exit()
                 
-#         random_action = env.action_space.sample() 
-#         obs, reward, terminated, truncated, info = env.step(random_action)
+        random_action = env.action_space.sample() 
+        obs, reward, terminated, truncated, info = env.step(random_action)
         
-#         env.render()
+        env.render()
         
-#         if terminated or truncated:
-#             obs, info = env.reset()
+        if terminated or truncated:
+            obs, info = env.reset()
             
-#     env.close()
+    env.close()
