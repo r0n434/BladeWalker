@@ -6,3 +6,5 @@ stable-baselines3>=2.3
 tensorboard>=2.15
 numpy>=1.26
 tensorflow-probability[tf]>=0.23
+neat-python>=0.92
+matplotlib>=3.8
