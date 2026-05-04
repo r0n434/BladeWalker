@@ -80,9 +80,8 @@ class RoboticArmTransporteurEnv(gym.Env):
         self.scale = (self.window_size / 2) / (max_reach * 1.2) # Facteur de conversion entre les coordonnées physiques (mètres) et les pixels pour l'affichage
 
         self.gfx_config = {
-            'base':        {'path': '../img/arm-base.png',       'scale': 0.3, 'pivot_x': 250, 'pivot_y': 125},
             'section':     {'path': '../img/arm-section.png',    'scale': 0.3, 'pivot_x': 80, 'pivot_y': 250},
-            'last_section':{'path': '../img/arm-section.png',    'scale': 0.3, 'pivot_x': 80, 'pivot_y': 250, 'crop_percent': 0.7},
+            'last_section':{'path': '../img/arm-section.png',    'scale': 0.3, 'pivot_x': 80, 'pivot_y': 250, 'crop_percent': 0.72},
             'claw_open':   {'path': '../img/arm-open-claw.png',  'scale': 0.2, 'pivot_x': 420, 'pivot_y': 260},
             'claw_closed': {'path': '../img/arm-close-claw.png', 'scale': 0.2, 'pivot_x': 420, 'pivot_y': 260},
         }
@@ -339,13 +338,6 @@ class RoboticArmTransporteurEnv(gym.Env):
             x += self.segment_lengths[i] * np.cos(cumulative_angle)
             y += self.segment_lengths[i] * np.sin(cumulative_angle)
             joint_positions.append((x, y))
-
-        # 3. Dessiner la BASE
-        base_pos = to_pixels(0.0, 0.0)
-        base_img = self.loaded_images['base']
-        base_pivot = (self.gfx_config['base']['pivot_x'] * self.gfx_config['base']['scale'], 
-                      self.gfx_config['base']['pivot_y'] * self.gfx_config['base']['scale'])
-        self.draw_image_with_pivot(self.window, base_img, base_pos, base_pivot, 0) 
 
         # 4. Dessiner les SEGMENTS du bras
         cumulative_angle = 0.0
