@@ -37,35 +37,43 @@ class PPO:
 
         return loss_total, loss_actor, loss_critic, loss_entropy
 
+    @tf.function
+    def _train_step(self, obs, actions, old_log_probs, returns, advantages):
+        with tf.GradientTape() as tape:
+            loss_total, loss_actor, loss_critic, loss_entropy = \
+                self._compute_losses(obs, actions, old_log_probs, returns, advantages)
+
+        grads = tape.gradient(loss_total, self.model.trainable_variables)
+        grads, _ = tf.clip_by_global_norm(grads, 0.5)
+        self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+
+        return loss_total, loss_actor, loss_critic, loss_entropy
+
+
     def update(self, buffer):
         metrics = {
-            "loss_total" : [],
-            "loss_actor" : [],
+            "loss_total"  : [],
+            "loss_actor"  : [],
             "loss_critic" : [],
-            "loss_entropy" : [],
+            "loss_entropy": [],
         }
 
         for epoch in range(self.n_epochs):
             for batch in buffer.get_batches(self.batch_size):
                 obs, actions, old_log_probs, returns, advantages = batch
 
-                obs = tf.convert_to_tensor(obs, dtype=tf.float32)
-                actions = tf.convert_to_tensor(actions, dtype=tf.float32)
+                obs           = tf.convert_to_tensor(obs,           dtype=tf.float32)
+                actions       = tf.convert_to_tensor(actions,       dtype=tf.float32)
                 old_log_probs = tf.convert_to_tensor(old_log_probs, dtype=tf.float32)
-                returns = tf.convert_to_tensor(returns, dtype=tf.float32)
-                advantages = tf.convert_to_tensor(advantages, dtype=tf.float32)
+                returns       = tf.convert_to_tensor(returns,       dtype=tf.float32)
+                advantages    = tf.convert_to_tensor(advantages,    dtype=tf.float32)
 
-                with tf.GradientTape() as tape:
-                    loss_total, loss_actor, loss_critic, loss_entropy = \
-                        self._compute_losses(obs, actions, old_log_probs, returns, advantages)
+                loss_total, loss_actor, loss_critic, loss_entropy = \
+                    self._train_step(obs, actions, old_log_probs, returns, advantages)
 
-                grads = tape.gradient(loss_total, self.model.trainable_variables)
-                grads, _ = tf.clip_by_global_norm(grads, 0.5)
-                self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
-
-                metrics["loss_total"].append(loss_total.numpy())
-                metrics["loss_actor"].append(loss_actor.numpy())
-                metrics["loss_critic"].append(loss_critic.numpy())
+                metrics["loss_total"  ].append(loss_total.numpy())
+                metrics["loss_actor"  ].append(loss_actor.numpy())
+                metrics["loss_critic" ].append(loss_critic.numpy())
                 metrics["loss_entropy"].append(loss_entropy.numpy())
 
         return {k: sum(v) / len(v) for k, v in metrics.items()}

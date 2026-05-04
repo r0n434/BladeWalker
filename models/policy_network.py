@@ -23,6 +23,7 @@ class ActorCritic(tf.keras.Model):
         value = self.critic(x)
         return mean, value
 
+    @tf.function
     def get_action(self, obs):
         mean, value = self.call(obs)
 
@@ -35,6 +36,7 @@ class ActorCritic(tf.keras.Model):
 
         return action, log_prob, value
 
+    @tf.function
     def evaluate_actions(self, obs, actions):
         mean, value = self.call(obs)
 
