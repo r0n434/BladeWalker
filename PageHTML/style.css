@@ -39,4 +39,99 @@ section {
     max-width: 600px;
 }
 
+/* Style spécifique au Dashboard */
+.dashboard-body {
+    background-color: #0b0e14;
+    height: 100vh;
+    overflow: hidden; /* Empêche le scroll global sur cette page */
+}
+
+.split-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    z-index: 1;
+}
+
+/* Côté Vidéo */
+.video-side {
+    flex: 1.2; /* Prend un peu plus de place que le texte */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+}
+
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    border: 2px solid #4facfe;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(79, 172, 254, 0.3);
+}
+
+video {
+    width: 100%;
+    display: block;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(79, 172, 254, 0.8);
+    padding: 5px 15px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+/* Côté Texte */
+.text-side {
+    flex: 0.8;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+
+.status-badge {
+    background: #e74c3c;
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.content-text h2 { color: #4facfe; margin-bottom: 10px; }
+.content-text p { line-height: 1.7; margin-bottom: 20px; }
+.content-text h3 { margin-top: 30px; margin-bottom: 10px; font-size: 1.1rem; }
+
+.navigation-controls {
+    margin-top: 50px;
+    display: flex;
+    gap: 20px;
+}
+
+.btn-next {
+    padding: 12px 30px;
+    background: #4facfe;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.btn-next:hover { background: #00f2fe; }
+
 .scroll-arrow { font-size: 3rem; color: white; text-decoration: none; display: block; margin-top: 20px; }
