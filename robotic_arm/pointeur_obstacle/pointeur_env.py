@@ -52,10 +52,10 @@ class RoboticArmPointeurEnv(gym.Env):
         # Le mode par défaut de Gymnasium est "none", surtout utilisé pour l'entraînement sans affichage.
         # Ici on veut voir le bras bouger, donc on utilise "human" pour afficher une fenêtre et brider le nombre de frames par seconde.
 
-        # self.window_size = 600 # Taille de la fenêtre d'affichage
-        # self.window = None # Fenêtre Pygame (sera créée au premier appel de render)
-        # self.clock = None # Horloge pour limiter le nombre de frames par seconde
-        # self.scale = (self.window_size / 2) / (max_reach * 1.2) # Facteur de conversion entre les coordonnées physiques (mètres) et les pixels pour l'affichage
+        self.window_size = 600 # Taille de la fenêtre d'affichage
+        self.window = None # Fenêtre Pygame (sera créée au premier appel de render)
+        self.clock = None # Horloge pour limiter le nombre de frames par seconde
+        self.scale = (self.window_size / 2) / (max_reach * 1.2) # Facteur de conversion entre les coordonnées physiques (mètres) et les pixels pour l'affichage
         
 
 
@@ -190,77 +190,84 @@ class RoboticArmPointeurEnv(gym.Env):
         return obs, reward, terminated, truncated, {"distance_to_target": distance, "energy_penalty": energy_penalty, "jitter_penalty": jitter_penalty} 
     
     # # La fonction render() est appelée pour afficher l'état actuel de l'environnement à l'écran
-    # def render(self):
+    def render(self):
 
-    #     if self.window is None:
-    #         pygame.init()
-    #         pygame.display.init()
-    #         self.window = pygame.display.set_mode((self.window_size, self.window_size))
-    #         pygame.display.set_caption("RL Robot Arm")
-    #         self.clock = pygame.time.Clock()
+        if self.window is None:
+            pygame.init()
+            pygame.display.init()
+            self.window = pygame.display.set_mode((self.window_size, self.window_size))
+            pygame.display.set_caption("RL Robot Arm")
+            self.clock = pygame.time.Clock()
 
-    #     self.window.fill((255, 255, 255))
+        self.window.fill((255, 255, 255))
 
-    #     def to_pixels(x, y):
+        def to_pixels(x, y):
 
-    #         px = int(self.window_size / 2 + x * self.scale)
-    #         py = int(self.window_size / 2 - y * self.scale)
-    #         return (px, py)
+            px = int(self.window_size / 2 + x * self.scale)
+            py = int(self.window_size / 2 - y * self.scale)
+            return (px, py)
 
-    #     target_px = to_pixels(self.target_pos[0], self.target_pos[1])
-    #     pygame.draw.circle(self.window, (255, 0, 0), target_px, 10)
+        if hasattr(self, 'obstacles'):
+            radius = getattr(self, 'obstacle_radius', 0.15)
+            for obs_pos in self.obstacles:
+                obs_px = to_pixels(obs_pos[0], obs_pos[1])
+                # On dessine un cercle noir (0.15 est le rayon défini dans le Wrapper)
+                pygame.draw.circle(self.window, (0, 0, 0), obs_px, int(radius * self.scale))
 
-    #     joint_positions = [(0.0, 0.0)] 
-    #     cumulative_angle = 0.0
+        target_px = to_pixels(self.target_pos[0], self.target_pos[1])
+        pygame.draw.circle(self.window, (255, 0, 0), target_px, 10)
+
+        joint_positions = [(0.0, 0.0)] 
+        cumulative_angle = 0.0
         
-    #     x, y = 0.0, 0.0
-    #     for i in range(self.number_links):
-    #         cumulative_angle += self.angles[i]
-    #         x += self.segment_lengths[i] * np.cos(cumulative_angle)
-    #         y += self.segment_lengths[i] * np.sin(cumulative_angle)
-    #         joint_positions.append((x, y))
+        x, y = 0.0, 0.0
+        for i in range(self.number_links):
+            cumulative_angle += self.angles[i]
+            x += self.segment_lengths[i] * np.cos(cumulative_angle)
+            y += self.segment_lengths[i] * np.sin(cumulative_angle)
+            joint_positions.append((x, y))
 
-    #     for i in range(len(joint_positions) - 1):
-    #         p1 = to_pixels(*joint_positions[i])
-    #         p2 = to_pixels(*joint_positions[i+1])
+        for i in range(len(joint_positions) - 1):
+            p1 = to_pixels(*joint_positions[i])
+            p2 = to_pixels(*joint_positions[i+1])
             
-    #         pygame.draw.line(self.window, (0, 0, 0), p1, p2, 5)
+            pygame.draw.line(self.window, (0, 0, 0), p1, p2, 5)
             
-    #         pygame.draw.circle(self.window, (0, 0, 255), p1, 8)
+            pygame.draw.circle(self.window, (0, 0, 255), p1, 8)
 
-    #     end_effector_px = to_pixels(*joint_positions[-1])
-    #     pygame.draw.circle(self.window, (0, 255, 0), end_effector_px, 8)
+        end_effector_px = to_pixels(*joint_positions[-1])
+        pygame.draw.circle(self.window, (0, 255, 0), end_effector_px, 8)
 
-    #     pygame.display.flip()
+        pygame.display.flip()
         
-    #     self.clock.tick(30)
+        self.clock.tick(30)
 
-    # # La fonction close() est appelée pour fermer proprement la fenêtre d'affichage
-    # def close(self):
-    #     """Ferme proprement la fenêtre Pygame."""
-    #     if self.window is not None:
-    #         pygame.quit()
-    #         self.window = None
-    #         self.clock = None
+    # La fonction close() est appelée pour fermer proprement la fenêtre d'affichage
+    def close(self):
+        """Ferme proprement la fenêtre Pygame."""
+        if self.window is not None:
+            pygame.quit()
+            self.window = None
+            self.clock = None
 
-# if __name__ == "__main__":
-#     env = RoboticArmPointeurEnv(segment_lengths=[1.0, 1.0])
-#     obs, info = env.reset()
+if __name__ == "__main__":
+    env = RoboticArmPointeurEnv(segment_lengths=[1.0, 1.0])
+    obs, info = env.reset()
     
-#     env.render() 
+    env.render() 
     
-#     for step in range(300):
-#         for event in pygame.event.get():
-#             if event.type == pygame.QUIT:
-#                 env.close()
-#                 exit()
+    for step in range(300):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                env.close()
+                exit()
                 
-#         random_action = env.action_space.sample() 
-#         obs, reward, terminated, truncated, info = env.step(random_action)
+        random_action = env.action_space.sample() 
+        obs, reward, terminated, truncated, info = env.step(random_action)
         
-#         env.render()
+        env.render()
         
-#         if terminated or truncated:
-#             obs, info = env.reset()
+        if terminated or truncated:
+            obs, info = env.reset()
             
-#     env.close()
+    env.close()

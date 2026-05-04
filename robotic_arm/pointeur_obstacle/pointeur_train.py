@@ -4,7 +4,9 @@ from pointeur_env import RoboticArmPointeurEnv
 from stable_baselines3 import PPO, SAC
 import argparse
 
-def PPO_train(segment_lengths=[1.0, 1.0], total_timesteps=500000, policy_kwargs=None,n_envs=4,model_name="ppo_arm"):
+from wrapper import ObstacleWrapper
+
+def PPO_train(segment_lengths=[1.0, 1.0], total_timesteps=500000, policy_kwargs=None,n_envs=4,model_name="ppo_arm_obstacles"):
     """
     Fonction d'entraînement avec PPO (Proximal Policy Optimization).
     
@@ -15,7 +17,15 @@ def PPO_train(segment_lengths=[1.0, 1.0], total_timesteps=500000, policy_kwargs=
     - Architecture : Nécessite moins de calculs, un réseau de [64, 64] est souvent suffisant.
     """
     env_kwargs = {"segment_lengths": segment_lengths}
-    vec_env = make_vec_env(RoboticArmPointeurEnv, n_envs=n_envs, env_kwargs=env_kwargs)
+    wrapper_kwargs = {}
+    
+    vec_env = make_vec_env(
+        RoboticArmPointeurEnv, 
+        n_envs=n_envs, 
+        env_kwargs=env_kwargs,
+        wrapper_class=ObstacleWrapper,
+        wrapper_kwargs=wrapper_kwargs
+    )
 
     for i in range(n_envs):
         vec_env.env_method("set_difficulty", 0.1, indices=i)
@@ -37,7 +47,7 @@ def PPO_train(segment_lengths=[1.0, 1.0], total_timesteps=500000, policy_kwargs=
 
     vec_env.close()
 
-def SAC_train(segment_lengths=[1.0, 1.0], total_timesteps=200000, policy_kwargs=None, model_name="sac_arm"):
+def SAC_train(segment_lengths=[1.0, 1.0], total_timesteps=200000, policy_kwargs=None, model_name="sac_arm_obstacles"):
     """
     Fonction d'entraînement avec SAC (Soft Actor-Critic).
     
@@ -49,8 +59,9 @@ def SAC_train(segment_lengths=[1.0, 1.0], total_timesteps=200000, policy_kwargs=
     """
 
     env = RoboticArmPointeurEnv(segment_lengths=segment_lengths)
+    env = ObstacleWrapper(env)
 
-    env.set_difficulty(0.1)
+    env.unwrapped.set_difficulty(0.1)
 
     curriculum_callback = CurriculumCallback(total_timesteps=total_timesteps, initial_difficulty=0.1)
 
@@ -89,7 +100,15 @@ class CurriculumCallback(BaseCallback):
 
         # On injecte cette nouvelle difficulté dans l'environnement
         # env_method est la fonction de SB3 pour parler à l'environnement
-        self.training_env.env_method("set_difficulty", current_difficulty)
+        # Vérification : est-ce un VecEnv (PPO) ou un env normal encapsulé (SAC) ?
+        if hasattr(self.training_env, 'env_method'):
+            # Cas PPO (VecEnv)
+            self.training_env.env_method("set_difficulty", current_difficulty)
+        else:
+            # Cas SAC (Environnement Gym normal + Wrapper)
+            # On passe au travers du Wrapper avec .unwrapped
+            if hasattr(self.training_env, 'envs'):
+                self.training_env.envs[0].unwrapped.set_difficulty(current_difficulty)
 
         # Petit affichage tous les 10 000 steps pour voir l'évolution en console
         if self.num_timesteps % 10000 == 0:
@@ -134,12 +153,12 @@ if __name__ == "__main__":
     if args.algo is None or args.algo == 'sac':
         ts = args.timesteps if args.timesteps is not None else 200000
         print(f"Lancement de SAC | Segments: {args.segments} | Architecture: {args.net_arch or '[256, 256] (défaut)'}")
-        SAC_train(segment_lengths=args.segments, total_timesteps=ts, policy_kwargs=policy_kwargs, model_name=args.model_name or "sac_arm")
+        SAC_train(segment_lengths=args.segments, total_timesteps=ts, policy_kwargs=policy_kwargs, model_name=args.model_name or "sac_arm_obstacles")
     elif args.algo == 'ppo':
         ts = args.timesteps if args.timesteps is not None else 500000
         print(f"Lancement de PPO | Segments: {args.segments} | Architecture: {args.net_arch or '[64, 64] (défaut)'}")
         n_envs = args.n_envs if args.n_envs is not None else 4
-        PPO_train(segment_lengths=args.segments, total_timesteps=ts, policy_kwargs=policy_kwargs, n_envs=args.n_envs, model_name=args.model_name or "ppo_arm")
+        PPO_train(segment_lengths=args.segments, total_timesteps=ts, policy_kwargs=policy_kwargs, n_envs=args.n_envs, model_name=args.model_name or "ppo_arm_obstacles")
         
 
         

@@ -3,6 +3,7 @@ import numpy as np
 import argparse
 from stable_baselines3 import SAC, PPO
 from pointeur_env import RoboticArmPointeurEnv
+from wrapper import ObstacleWrapper
 
 parser = argparse.ArgumentParser(description="Mode interactif pour bras robotisé.")
 parser.add_argument("model_path", type=str, help="Chemin vers le fichier .zip du modèle")
@@ -15,7 +16,8 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-env = RoboticArmPointeurEnv(segment_lengths=[1.0, 1.0, 1.0])
+env = RoboticArmPointeurEnv(segment_lengths=[1.0, 1.0])
+env = ObstacleWrapper(env)
 
 algo_class = SAC if args.algo.upper() == "SAC" else PPO
 
@@ -60,10 +62,24 @@ while running:
 
     angles = env.unwrapped.angles
     main_pos = env.unwrapped.get_end_arm_pos()
-    obs = np.concatenate([angles, env.unwrapped.target_pos, main_pos]).astype(np.float32)
+    
+    # 1. Observation de base (Bras + Cible)
+    base_obs = np.concatenate([angles, env.unwrapped.target_pos, main_pos]).astype(np.float32)
+    
+    # 2. Ajout des obstacles
+    flat_obstacles = np.concatenate(env.obstacles) if env.obstacles else np.array([])
+    
+    # 3. Ajout de la collision (on lit l'info du tour précédent)
+    collision_val = float(info.get("collision", False)) 
+    
+    # 4. On fusionne le tout pour le cerveau de l'IA
+    obs = np.concatenate([base_obs, flat_obstacles, [collision_val]]).astype(np.float32)
 
+    # 5. L'IA prédit l'action
     action, _ = model.predict(obs, deterministic=True)
-    env.step(action)
+    
+    # 6. /!\ TRES IMPORTANT : on récupère 'info' pour le prochain tour de boucle !
+    obs_next, reward, terminated, truncated, info = env.step(action)
     
     env.render()
 
