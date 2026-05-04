@@ -198,6 +198,141 @@ input[type="range"]::-webkit-slider-thumb:hover {
     color: #7f8c8d;
 }
 
+.levels-body {
+    background-color: #0b0e14;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.map-container {
+    text-align: center;
+    z-index: 1;
+    width: 90%;
+    max-width: 1000px;
+}
+
+.world-map {
+    position: relative;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 100px 0;
+    margin-top: 50px;
+}
+
+/* Ligne reliant les niveaux */
+.path-line {
+    position: absolute;
+    top: 50%;
+    left: 5%;
+    right: 5%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+}
+
+/* Style des Nœuds (Niveaux) */
+.level-node {
+    width: 80px;
+    height: 80px;
+    background: #2c3e50;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    font-size: 1.5rem;
+    border: 4px solid #7f8c8d;
+    position: relative;
+    transition: 0.3s all ease;
+}
+
+/* Niveau complété (Vert comme Mario) */
+.level-node.completed {
+    background: #27ae60;
+    border-color: #2ecc71;
+    box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
+}
+
+/* Niveau actuel (Bleu SMART) */
+.level-node.active {
+    background: #2980b9;
+    border-color: #3498db;
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 30px rgba(52, 152, 219, 0.6);
+}
+
+/* Niveau verrouillé */
+.level-node.locked {
+    background: #34495e;
+    border-color: #2c3e50;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Tooltip au survol */
+.node-tooltip {
+    position: absolute;
+    bottom: -40px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.level-node:hover .node-tooltip {
+    opacity: 1;
+    bottom: -50px;
+}
+
+.level-node:hover {
+    transform: scale(1.2);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Panneau d'info en bas */
+.level-info-panel {
+    margin-top: 50px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Style du personnage Robot */
+.robot-character {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: rgba(79, 172, 254, 0.15); /* Couleur SMART */
+    border: 2px solid #4facfe;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.5rem; /* Emoji Robot */
+    z-index: 10;
+    
+    /* Animation fluide de mouvement (transition) */
+    transition: left 0.5s ease-out, top 0.5s ease-out, transform 0.3s;
+    pointer-events: none; /* Le personnage ne bloque pas les clics sur les nœuds */
+    
+    /* Position initialisée sur le premier niveau (ajustée dynamiquement par JS) */
+    transform: translate(-50%, -50%); /* Centrage */
+}
+
 .btn-next:hover { background: #00f2fe; }
 
 .scroll-arrow { font-size: 3rem; color: white; text-decoration: none; display: block; margin-top: 20px; }
