@@ -19,23 +19,39 @@
             </div>
         </div>
 
-        <div class="text-side">
+<div class="text-side">
             <div class="content-text">
                 <h2>Analyse de l'Apprentissage</h2>
                 <hr>
                 <div class="status-badge">Phase : Exploration (Échec)</div>
                 
                 <p>
-                    À cette étape, l'IA utilise une <strong>distribution gaussienne</strong> pour tester des mouvements aléatoires[cite: 14]. 
-                    Comme vous pouvez le voir, le robot tombe rapidement car il n'a pas encore associé la stabilité à une 
-                    récompense positive[cite: 10, 15].
+                    À cette étape, l'IA utilise une <strong>distribution gaussienne</strong> pour tester des mouvements aléatoires.
                 </p>
-                
-                <h3>Ce que l'IA "voit" :</h3>
-                <ul>
-                    <li><strong>États :</strong> Inclinaison du torse, vitesse des articulations[cite: 9].</li>
-                    <li><strong>Actions :</strong> Force envoyée aux moteurs des jambes[cite: 9].</li>
-                </ul>
+
+                <div class="parameters-section">
+                    <h3>Ajustement de la Récompense</h3>
+                    
+                    <div class="parameter-group">
+                        <label for="energy-penalty">Pénalité d'énergie</label>
+                        <input type="range" id="energy-penalty" min="1" max="3" step="1" value="2">
+                        <div class="slider-labels">
+                            <span>Faible</span>
+                            <span>Moyen</span>
+                            <span>Fort</span>
+                        </div>
+                    </div>
+
+                    <div class="parameter-group">
+                        <label for="shake-penalty">Pénalité de tremblement</label>
+                        <input type="range" id="shake-penalty" min="1" max="3" step="1" value="2">
+                        <div class="slider-labels">
+                            <span>Faible</span>
+                            <span>Moyen</span>
+                            <span>Fort</span>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="navigation-controls">
                     <button class="btn-secondary" onclick="window.history.back()">RETOUR</button>
@@ -43,7 +59,6 @@
             </div>
         </div>
     </div>
-
     <script src="particles.js"></script>
 </body>
 </html>

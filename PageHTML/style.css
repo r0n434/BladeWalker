@@ -132,6 +132,72 @@ video {
     transition: 0.3s;
 }
 
+/* Section Paramètres */
+.parameters-section {
+    margin: 30px 0;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.parameters-section h3 {
+    font-size: 1rem;
+    color: #4facfe;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.parameter-group {
+    margin-bottom: 25px;
+}
+
+.parameter-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    color: #fff;
+}
+
+/* Personnalisation du Slider (Range Input) */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #4facfe;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
+    transition: 0.2s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: #00f2fe;
+}
+
+.slider-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 0 5px;
+}
+
+.slider-labels span {
+    font-size: 0.75rem;
+    color: #7f8c8d;
+}
+
 .btn-next:hover { background: #00f2fe; }
 
 .scroll-arrow { font-size: 3rem; color: white; text-decoration: none; display: block; margin-top: 20px; }
