@@ -1,0 +1,42 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Arial', sans-serif;
+    overflow-x: hidden;
+    /* La couleur de fond change selon la classe appliquée via JS */
+    transition: background-color 0.8s ease;
+    background-color: #000; 
+}
+
+body.red-mode { background-color: #e74c3c; }
+
+#canvas-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.main-wrapper { position: relative; z-index: 1; }
+
+section {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    padding: 3rem;
+    border-radius: 20px;
+    text-align: center;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 600px;
+}
+
+.scroll-arrow { font-size: 3rem; color: white; text-decoration: none; display: block; margin-top: 20px; }
